@@ -1,7 +1,5 @@
 #include "lib.h"
 
-#define WIDTH 316
-#define INF 1000
 
 #define K_MAIN_INTERVAL (100 / kPit1Period)
 
@@ -17,8 +15,7 @@ int main() {
 
     mDelay_GetDelay(kPit1, 500 / kPit1Period);
 
-
-    uint8_t r[316], g[316], b[316];
+    uint8_t r, g, b;
 
     // middle pixel index
     const int middle = WIDTH / 2;
@@ -42,16 +39,20 @@ int main() {
     // if the minimum distance between right and left is smaller than this, don't do anything
     const int minLRDistance = 10;
 
-    // row camera takes the image from
-    const int row = 100;
+    // rows camera takes the image from
+    const int topRow = 50;
+    const int bottomRow = 100;
 
+    // control variables
     bool debugMode = false;
     bool reset = true;
 
+    // center servo
     turn(0);
-    mDac_SetDac0Output((mAd_Read(kPot1) + 1.0) / 2.0);
-//    pixy.setLamp(100, 100);
+
+    // main loop
 	while(true) {
+	    // set debug mode on if switch 4 is set
 	    if (readSwitch(kSw4)) {
 	        debugMode = true;
 	    } else {
@@ -59,39 +60,47 @@ int main() {
 	    }
 
 	    if (readSwitch(kSw1)) {
+	        // add initial color samples
             if (reset) {
                 resetSamples();
                 for (int i = middle - 2; i < middle + 2; ++i) {
-                    pixy.video.getRGB(i, row, r + i, g + i, b + i, false);
-                    addSample({r[i], g[i], b[i]});
+                    pixy.video.getRGB(i, bottomRow, &r, &g, &b, false);
+                    addSample({r, g, b});
                 }
-
                 reset = false;
             }
 
-            pixy.setLED(255, 0, 0);
-            int left = -1;
-            int right = INF;
+            // check top row for straight lines
+            left = getLeft(pixy, topRow);
+            right = getRight(pixy, bottomRow);
+
+            if (left != -1 && right != INF) {
+                // sees 2 lines
+                float rightFraction = ((float)(right - middle)) / ((float)(right - left));
+                if (rightFraction > straightThreshold) {
+                    turn(straightSteerFactor);
+                } else if (rightFraction < 1 - straightThreshold) {
+                    turn(-straightSteerFactor);
+                } else {
+                    turn(0);
+                }
+
+                driveMotor(normalSpeed);
+                continue;
+            }
+
+            // if the top view doesn't see 2 lines switch to close view and control curve
+            left = getLeft(pixy, bottomRow);
+            right = getRight(pixy, bottomRow);
+
             float leftSpeed = 0;
             float rightSpeed = 0;
-            for (int i = middle - 1; i >= 0; --i) {
-                pixy.video.getRGB(i, row, r + i, g + i, b + i, false);
-                if (!isWhite({r[i], g[i], b[i]}, middle - i < 10)) {
-                    left = i;
-                    break;
-                }
+
+            if (debugMode) {
+                printf("%d %d\n", left, right);
+                printf("%d %d %d\n", r[middle], g[middle], b[middle]);
             }
 
-            for (int i = middle; i < WIDTH; i++) {
-                pixy.video.getRGB(i, row, r + i, g + i, b + i, false);
-                if (!isWhite({r[i], g[i], b[i]}, i - middle < 10)) {
-                    right = i;
-                    break;
-                }
-            }
-
-//            printf("%d %d\n", left, right);
-//            printf("%d %d %d\n", r[middle], g[middle], b[middle]);
             if (right - left <= minLRDistance) {
                 continue;
             }
@@ -111,16 +120,7 @@ int main() {
                 rightSpeed = curveSpeedFactor * normalSpeed;
                 leftSpeed = curveSteerSpeedFactor * curveSpeedFactor * normalSpeed;
             } else {
-                // sees 2 lines
-                pixy.setLED(0, 0, 255);
-                float rightFraction = ((float)(right - middle)) / ((float)(right - left));
-                if (rightFraction > straightThreshold) {
-                    turn(straightSteerFactor);
-                } else if (rightFraction < 1 - straightSteerFactor) {
-                    turn(-straightSteerFactor);
-                } else {
-                    turn(0);
-                }
+                turn(0);
                 leftSpeed = rightSpeed = normalSpeed;
             }
 
@@ -136,6 +136,4 @@ int main() {
 	        turn(0);
 	    }
 	}
-
-	return 0;
 }

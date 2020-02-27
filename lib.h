@@ -36,10 +36,11 @@ extern "C"
 #include <cmath>
 #include "Pixy/Pixy2SPI_SS.h"
 
-
-
 #define K_MAIN_INTERVAL	(100 / kPit1Period)
 #define kSpeedTabSize 100
+
+# define WIDTH 316
+#define INF 1000
 
 // Mesure de vitesse et de sens
 static Int16 sDly;
@@ -67,10 +68,30 @@ struct rgb {
     }
 } avg;
 
-bool isBlack(rgb c, int threshold = 90) {
-    if ((c.r + c.g + c.b) < 3 * threshold)
-        return true;
-    return false;
+int getRight(const Pixy2SPI_SS &pixy, const int row) {
+    uint8_t r, g, b;
+
+    for (int i = middle; i < WIDTH; ++i) {
+        pixy.video.getRGB(i, row, &r, &g, &b, false);
+        if (!isWhite({r, g, b}, i - middle < 10)) {
+            return i;
+        }
+    }
+
+    return INF;
+}
+
+int getLeft(const Pixy2SPI_SS &pixy, const int row) {
+    uint8_t r, g, b;
+
+    for (int i = middle - 1; i >= 0; --i) {
+        pixy.video.getRGB(i, row, &r, &g, &b, false);
+        if (!isWhite({r, g, b}, middle - i < 10)) {
+            return i;
+        }
+    }
+
+    return -1;
 }
 
 double cosineSimilarity(rgb a, rgb b) {
@@ -113,7 +134,6 @@ bool isWhite(rgb x, bool toAdd=false, double threshold=0.85) {
     false;
 }
 
-
 // Change led state
 // led: kMaskLed1, kMaskLed2, kMaskLed3, kMaskLed4
 // state: kLedOff, kLedOn
@@ -123,6 +143,12 @@ void led(LedMaskEnum led, LedStateEnum state) {
 // Togglezzzzzzzzzzzzzzzzzzzzszzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz led
 void toggleLed(LedMaskEnum led) {
     mLeds_Toggle(led);
+}
+
+void setLights(float val) {
+    if (val < -1) val = -1;
+    else if (val > 1) val = 1;
+    mDac_SetDac0Output((val + 1.0) / 2.0);
 }
 
 // Check if switch is turned on
@@ -165,6 +191,7 @@ void driveMotorIndividual(float left, float right) {
 void motorSpeed(float *left, float *right) {
     mTimer_GetSpeed(*&left, *&right);
 }
+
 // side: 0 left, 1 right
 float motorSpeedSide(int side) {
     float aSpeedMotLeft;
