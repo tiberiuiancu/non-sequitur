@@ -24,17 +24,20 @@ int main() {
     const int middle = WIDTH / 2;
 
     // speed of the car
-    float normalSpeed = 0.20f;
+    float normalSpeed = 0.25f;
 
     // steering multiplier for when the car is going forwards
-    const float straightSteerFactor = 0.4f;
+    const float straightSteerFactor = 0.2f;
 
     // speed multiplier for when a curve is detected
-    const float curveSpeedFactor = 0.5f;
-    const float curveSpeedWheelFactor = 0.5f;
+    const float curveSpeedFactor = 1.0f;
+    const float curveSteerSpeedFactor = 0.5f;
 
     // speed multiplier for when an intersection is detected
     const float intersectionSpeedFactor = 0.8f;
+    
+    // threshold for when the cars is too much to one side in a straight line
+    const float straightThreshold = 0.7f;
 
     // if the minimum distance between right and left is smaller than this, don't do anything
     const int minLRDistance = 10;
@@ -44,7 +47,6 @@ int main() {
 
     bool debugMode = false;
     bool reset = true;
-    bool toturn = false;
 
     turn(0);
     mDac_SetDac0Output((mAd_Read(kPot1) + 1.0) / 2.0);
@@ -70,7 +72,8 @@ int main() {
             pixy.setLED(255, 0, 0);
             int left = -1;
             int right = INF;
-            float speed = 0;
+            float leftSpeed = 0;
+            float rightSpeed = 0;
             for (int i = middle - 1; i >= 0; --i) {
                 pixy.video.getRGB(i, row, r + i, g + i, b + i, false);
                 if (!isWhite({r[i], g[i], b[i]}, middle - i < 10)) {
@@ -89,44 +92,42 @@ int main() {
 
 //            printf("%d %d\n", left, right);
 //            printf("%d %d %d\n", r[middle], g[middle], b[middle]);
-//            printf("%d\n", cosineSimilarity({r[middle], g[middle], b[middle]}, avg) * 100);
             if (right - left <= minLRDistance) {
                 continue;
             }
 
-            normalSpeed = readSensor(kPot1);
-            curveSpeedFactor = readSensor(kPot2);
-            toturn = false;
-
             if (right == INF && left == -1) {
                 // probably intersection
-                speed = intersectionSpeedFactor * normalSpeed;
+                leftSpeed = rightSpeed = intersectionSpeedFactor * normalSpeed;
                 turn(0);
             } else if (right == INF) {
                 // probably right turn
                 turn(1);
-                toturn = true;
-                leftspeed = curveSpeedFactor * normalSpeed;
-                rightspeed = curveSpeedFactor * curveSpeedWheelFactor * normalSpeed;
+                rightSpeed = curveSteerSpeedFactor * curveSpeedFactor * normalSpeed;
+                leftSpeed = curveSpeedFactor * normalSpeed;
             } else if (left == -1) {
                 // probably left turn
                 turn(-1);
-                toturn = true;
-                leftspeed = curveSpeedFactor * curveSpeedWheelFactor * normalSpeed;
-                rightspeed = curveSpeedFactor * normalSpeed;
+                rightSpeed = curveSpeedFactor * normalSpeed;
+                leftSpeed = curveSteerSpeedFactor * curveSpeedFactor * normalSpeed;
             } else {
-                turn(0);
-                speed = normalSpeed;
+                // sees 2 lines
+                pixy.setLED(0, 0, 255);
+                float rightFraction = ((float)(right - middle)) / ((float)(right - left));
+                if (rightFraction > straightThreshold) {
+                    turn(straightSteerFactor);
+                } else if (rightFraction < 1 - straightSteerFactor) {
+                    turn(-straightSteerFactor);
+                } else {
+                    turn(0);
+                }
+                leftSpeed = rightSpeed = normalSpeed;
             }
 
             if (debugMode) {
                 driveMotor(0);
             } else {
-                if (toturn) {
-                    driveMotorIndividual(leftspeed, rightspeed);
-                } else {
-                    driveMotor(speed);
-                }
+                driveMotorIndividual(leftSpeed, rightSpeed);
             }
         } else {
 	        reset = true;
