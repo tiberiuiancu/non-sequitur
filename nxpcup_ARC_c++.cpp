@@ -78,7 +78,7 @@ int main() {
             left = getLeft(pixy, topRow);
             right = getRight(pixy, bottomRow);
 
-            if (left != -1 && right != INF) {
+            if (left != -1 && right != INF && right - left > minLRDistance) {
                 // sees 2 lines
                 float rightFraction = ((float)(right - middle)) / ((float)(right - left));
                 if (rightFraction > straightThreshold) {

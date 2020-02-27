@@ -42,7 +42,6 @@ extern "C"
 # define WIDTH 316
 #define INF 1000
 
-// Mesure de vitesse et de sens
 static Int16 sDly;
 
 // values to calibrate the motors and the servo
