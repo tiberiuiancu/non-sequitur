@@ -47,6 +47,10 @@ int main() {
     bool debugMode = false;
     bool reset = true;
 
+    // variables to store position of left and right lines
+    int left = -1;
+    int right = INF;
+
     // center servo
     turn(0);
 
@@ -98,7 +102,6 @@ int main() {
 
             if (debugMode) {
                 printf("%d %d\n", left, right);
-                printf("%d %d %d\n", r[middle], g[middle], b[middle]);
             }
 
             if (right - left <= minLRDistance) {

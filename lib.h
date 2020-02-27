@@ -45,11 +45,14 @@ extern "C"
 // Mesure de vitesse et de sens
 static Int16 sDly;
 
+// values to calibrate the motors and the servo
 const float calibrate = 0.965f;
 const float servoOffset = 0.085f;
 
 const float minSpeed = 0.35f;
 const float maxSpeed = 1.0f;
+
+const int middle = WIDTH / 2;
 
 int nSamples = 0;
 
@@ -67,32 +70,6 @@ struct rgb {
         return max(max(r, g), b);
     }
 } avg;
-
-int getRight(const Pixy2SPI_SS &pixy, const int row) {
-    uint8_t r, g, b;
-
-    for (int i = middle; i < WIDTH; ++i) {
-        pixy.video.getRGB(i, row, &r, &g, &b, false);
-        if (!isWhite({r, g, b}, i - middle < 10)) {
-            return i;
-        }
-    }
-
-    return INF;
-}
-
-int getLeft(const Pixy2SPI_SS &pixy, const int row) {
-    uint8_t r, g, b;
-
-    for (int i = middle - 1; i >= 0; --i) {
-        pixy.video.getRGB(i, row, &r, &g, &b, false);
-        if (!isWhite({r, g, b}, middle - i < 10)) {
-            return i;
-        }
-    }
-
-    return -1;
-}
 
 double cosineSimilarity(rgb a, rgb b) {
     double top = a.r * b.r + a.g * b.g + a.b * b.b;
@@ -132,6 +109,32 @@ bool isWhite(rgb x, bool toAdd=false, double threshold=0.85) {
         return true;
     }
     false;
+}
+
+int getRight(Pixy2SPI_SS &pixy, const int row) {
+    uint8_t r, g, b;
+
+    for (int i = middle; i < WIDTH; ++i) {
+        pixy.video.getRGB(i, row, &r, &g, &b, false);
+        if (!isWhite({r, g, b}, i - middle < 10)) {
+            return i;
+        }
+    }
+
+    return INF;
+}
+
+int getLeft(Pixy2SPI_SS &pixy, const int row) {
+    uint8_t r, g, b;
+
+    for (int i = middle - 1; i >= 0; --i) {
+        pixy.video.getRGB(i, row, &r, &g, &b, false);
+        if (!isWhite({r, g, b}, middle - i < 10)) {
+            return i;
+        }
+    }
+
+    return -1;
 }
 
 // Change led state
