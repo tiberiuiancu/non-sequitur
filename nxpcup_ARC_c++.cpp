@@ -21,17 +21,18 @@ int main() {
     const int middle = WIDTH / 2;
 
     // speed of the car
-    float normalSpeed = 0.35f;
+    float normalSpeed = 0.32f;
 
     // steering multiplier for when the car is going forwards
     const float straightSteerFactor = 0.15f;
 
     // speed multiplier for when a curve is detected
-    const float curveSpeedFactor = 0.7f;
-    const float curveSteerSpeedFactor = 0.5f;
+    const float curveSpeedFactor = 0.75f;
+    const float curveSteerSlowSpeedFactor = 0.15f;
+    const float curveSteerFastSpeedFactor = 1.7f;
 
     // speed multiplier for when an intersection is detected
-    const float intersectionSpeedFactor = 0.8f;
+    const float intersectionSpeedFactor = 0.7f;
     
     // threshold for when the cars is too much to one side in a straight line
     const float straightThreshold = 0.65f;
@@ -97,7 +98,7 @@ int main() {
                 continue;
             }
 
-            driveMotor(0.7 * normalSpeed);
+            driveMotor(curveSpeedFactor * normalSpeed);
             // if the top view doesn't see 2 lines switch to close view and control curve
             left = getLeft(pixy, bottomRow);
             right = getRight(pixy, bottomRow);
@@ -120,13 +121,13 @@ int main() {
             } else if (right == INF) {
                 // probably right turn
                 turn(1);
-                rightSpeed = curveSteerSpeedFactor * curveSpeedFactor * normalSpeed;
-                leftSpeed = curveSpeedFactor * normalSpeed;
+                rightSpeed = curveSteerSlowSpeedFactor * normalSpeed;
+                leftSpeed = curveSteerFastSpeedFactor * normalSpeed;
             } else if (left == -1) {
                 // probably left turn
                 turn(-1);
-                rightSpeed = curveSpeedFactor * normalSpeed;
-                leftSpeed = curveSteerSpeedFactor * curveSpeedFactor * normalSpeed;
+                rightSpeed = curveSteerFastSpeedFactor * normalSpeed;
+                leftSpeed = curveSteerSlowSpeedFactor *  normalSpeed;
             } else {
                 turn(0);
                 leftSpeed = rightSpeed = normalSpeed;

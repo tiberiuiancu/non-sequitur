@@ -113,7 +113,7 @@ bool isWhite(rgb x, bool toAdd=false, double threshold=0.75) {
 int getRight(Pixy2SPI_SS &pixy, const int row) {
     uint8_t r, g, b;
 
-    for (int i = middle; i < WIDTH; ++i) {
+    for (int i = middle; i < WIDTH; i += 2) {
         pixy.video.getRGB(i, row, &r, &g, &b, false);
         if (!isWhite({r, g, b}, i - middle < 10)) {
             return i;
@@ -126,7 +126,7 @@ int getRight(Pixy2SPI_SS &pixy, const int row) {
 int getLeft(Pixy2SPI_SS &pixy, const int row) {
     uint8_t r, g, b;
 
-    for (int i = middle - 1; i >= 0; --i) {
+    for (int i = middle - 1; i >= 0; i -= 2) {
         pixy.video.getRGB(i, row, &r, &g, &b, false);
         if (!isWhite({r, g, b}, middle - i < 10)) {
             return i;
