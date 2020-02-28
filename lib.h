@@ -39,7 +39,7 @@ extern "C"
 #define K_MAIN_INTERVAL	(100 / kPit1Period)
 #define kSpeedTabSize 100
 
-# define WIDTH 316
+#define WIDTH 316
 #define INF 1000
 
 static Int16 sDly;
@@ -100,7 +100,7 @@ void resetSamples() {
     avg.r = avg.b = avg.g = 0;
 }
 
-bool isWhite(rgb x, bool toAdd=false, double threshold=0.85) {
+bool isWhite(rgb x, bool toAdd=false, double threshold=0.75) {
     double c = cosineSimilarity(x, avg);
 
     if (c >= threshold) {

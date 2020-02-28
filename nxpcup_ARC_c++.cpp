@@ -24,20 +24,20 @@ int main() {
     float normalSpeed = 0.25f;
 
     // steering multiplier for when the car is going forwards
-    const float straightSteerFactor = 0.2f;
+    const float straightSteerFactor = 0.15f;
 
     // speed multiplier for when a curve is detected
-    const float curveSpeedFactor = 1.0f;
-    const float curveSteerSpeedFactor = 0.5f;
+    const float curveSpeedFactor = 0.9f;
+    const float curveSteerSpeedFactor = 0.7f;
 
     // speed multiplier for when an intersection is detected
     const float intersectionSpeedFactor = 0.8f;
     
     // threshold for when the cars is too much to one side in a straight line
-    const float straightThreshold = 0.7f;
+    const float straightThreshold = 0.65f;
 
     // if the minimum distance between right and left is smaller than this, don't do anything
-    const int minLRDistance = 10;
+    const int minLRDistance = 50;
 
     // rows camera takes the image from
     const int topRow = 50;
@@ -76,7 +76,11 @@ int main() {
 
             // check top row for straight lines
             left = getLeft(pixy, topRow);
-            right = getRight(pixy, bottomRow);
+            right = getRight(pixy, topRow);
+
+            if (debugMode) {
+                printf("upper: %d %d\n", left, right);
+            }
 
             if (left != -1 && right != INF && right - left > minLRDistance) {
                 // sees 2 lines
@@ -134,7 +138,6 @@ int main() {
             }
         } else {
 	        reset = true;
-
 	        driveMotor(0);
 	        turn(0);
 	    }
