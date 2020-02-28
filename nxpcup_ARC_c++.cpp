@@ -21,14 +21,14 @@ int main() {
     const int middle = WIDTH / 2;
 
     // speed of the car
-    float normalSpeed = 0.25f;
+    float normalSpeed = 0.35f;
 
     // steering multiplier for when the car is going forwards
     const float straightSteerFactor = 0.15f;
 
     // speed multiplier for when a curve is detected
-    const float curveSpeedFactor = 0.9f;
-    const float curveSteerSpeedFactor = 0.7f;
+    const float curveSpeedFactor = 0.7f;
+    const float curveSteerSpeedFactor = 0.5f;
 
     // speed multiplier for when an intersection is detected
     const float intersectionSpeedFactor = 0.8f;
@@ -37,10 +37,10 @@ int main() {
     const float straightThreshold = 0.65f;
 
     // if the minimum distance between right and left is smaller than this, don't do anything
-    const int minLRDistance = 50;
+    const int minLRDistance = 130;
 
     // rows camera takes the image from
-    const int topRow = 50;
+    const int topRow = 10;
     const int bottomRow = 100;
 
     // control variables
@@ -97,6 +97,7 @@ int main() {
                 continue;
             }
 
+            driveMotor(0.7 * normalSpeed);
             // if the top view doesn't see 2 lines switch to close view and control curve
             left = getLeft(pixy, bottomRow);
             right = getRight(pixy, bottomRow);
