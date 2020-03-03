@@ -36,19 +36,22 @@ extern "C"
 #include <cmath>
 #include "Pixy/Pixy2SPI_SS.h"
 
-
-
 #define K_MAIN_INTERVAL	(100 / kPit1Period)
 #define kSpeedTabSize 100
 
-// Mesure de vitesse et de sens
+# define WIDTH 316
+#define INF 1000
+
 static Int16 sDly;
 
+// values to calibrate the motors and the servo
 const float calibrate = 0.965f;
 const float servoOffset = 0.085f;
 
 const float minSpeed = 0.35f;
 const float maxSpeed = 1.0f;
+
+const int middle = WIDTH / 2;
 
 int nSamples = 0;
 
@@ -66,12 +69,6 @@ struct rgb {
         return max(max(r, g), b);
     }
 } avg;
-
-bool isBlack(rgb c, int threshold = 90) {
-    if ((c.r + c.g + c.b) < 3 * threshold)
-        return true;
-    return false;
-}
 
 double cosineSimilarity(rgb a, rgb b) {
     double top = a.r * b.r + a.g * b.g + a.b * b.b;
@@ -113,6 +110,78 @@ bool isWhite(rgb x, bool toAdd=false, double threshold=0.85) {
     false;
 }
 
+// used for the barcode_scanner function
+bool check_color(uint8_t r, uint8_t g, uint8_t b){
+	if(r > 200 && g > 200 && b > 200){
+		return true;
+	} else return false;
+}
+
+int findObjects(Pixy2SPI_SS &pixy, const int row){
+	uint8_t r, g, b;
+	int blackObjects = 0, keySwitch = 1;
+
+	for(int i = 0; i < WIDTH; i = i + 2){
+		pixy.video.getRGB(i, row, &r, &g, &b, false);
+		bool callFunc = isWhite({r, g, b});
+
+		if(callFunc == true){
+			keySwitch = 1;
+		} else if(callFunc == false && keySwitch == 1){
+			blackObjects++;
+			keySwitch = 0;
+		}
+	}
+
+	return blackObjects;
+}
+
+
+// used for checking the number of black blocks on the race track (for stopping/accelerating/slowing-down)
+int barcode_scanner(Pixy2SPI_SS &pixy, const int row){
+	uint8_t r, g, b;
+	int keyWhite = 0, checkSwitch = 1;
+
+	for(int i = 0; i < WIDTH; i = i + 2){
+		pixy.video.getRGB(i, row, &r, &g, &b, false);
+		if(check_color(r, b, g) == true){
+			if(checkSwitch == 1){
+				keyWhite++;
+				printf("\nkeyWhite: %d", keyWhite);
+				checkSwitch = 0;
+			}
+		} else {
+			checkSwitch = 1;
+		}
+	}
+
+	return keyWhite;
+}
+
+int getRight(Pixy2SPI_SS &pixy, const int row) {
+    uint8_t r, g, b;
+
+    for (int i = middle; i < WIDTH; ++i) {
+        pixy.video.getRGB(i, row, &r, &g, &b, false);
+        if (!isWhite({r, g, b}, i - middle < 10)) {
+            return i;
+        }
+    }
+    return INF;
+}
+
+int getLeft(Pixy2SPI_SS &pixy, const int row) {
+    uint8_t r, g, b;
+
+    for (int i = middle - 1; i >= 0; --i) {
+        pixy.video.getRGB(i, row, &r, &g, &b, false);
+        if (!isWhite({r, g, b}, middle - i < 10)) {
+            return i;
+        }
+    }
+
+    return -1;
+}
 
 // Change led state
 // led: kMaskLed1, kMaskLed2, kMaskLed3, kMaskLed4
@@ -123,6 +192,12 @@ void led(LedMaskEnum led, LedStateEnum state) {
 // Togglezzzzzzzzzzzzzzzzzzzzszzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz led
 void toggleLed(LedMaskEnum led) {
     mLeds_Toggle(led);
+}
+
+void setLights(float val) {
+    if (val < -1) val = -1;
+    else if (val > 1) val = 1;
+    mDac_SetDac0Output((val + 1.0) / 2.0);
 }
 
 // Check if switch is turned on
@@ -165,6 +240,7 @@ void driveMotorIndividual(float left, float right) {
 void motorSpeed(float *left, float *right) {
     mTimer_GetSpeed(*&left, *&right);
 }
+
 // side: 0 left, 1 right
 float motorSpeedSide(int side) {
     float aSpeedMotLeft;
