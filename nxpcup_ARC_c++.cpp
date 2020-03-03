@@ -9,7 +9,7 @@
 
 int main() {
 	init();
-
+	//pixels
     // Pixycam
     Pixy2SPI_SS pixy;
     pixy.init();
