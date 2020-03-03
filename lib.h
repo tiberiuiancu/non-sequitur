@@ -110,44 +110,16 @@ bool isWhite(rgb x, bool toAdd=false, double threshold=0.85) {
     false;
 }
 
-// used for the barcode_scanner function
-bool check_color(uint8_t r, uint8_t g, uint8_t b){
-	if(r > 200 && g > 200 && b > 200){
-		return true;
-	} else return false;
-}
-
-int findObjects(Pixy2SPI_SS &pixy, const int row){
-	uint8_t r, g, b;
-	int blackObjects = 0, keySwitch = 1;
-
-	for(int i = 0; i < WIDTH; i = i + 2){
-		pixy.video.getRGB(i, row, &r, &g, &b, false);
-		bool callFunc = isWhite({r, g, b});
-
-		if(callFunc == true){
-			keySwitch = 1;
-		} else if(callFunc == false && keySwitch == 1){
-			blackObjects++;
-			keySwitch = 0;
-		}
-	}
-
-	return blackObjects;
-}
-
-
 // used for checking the number of black blocks on the race track (for stopping/accelerating/slowing-down)
-int barcode_scanner(Pixy2SPI_SS &pixy, const int row){
+int barcodeScanner(Pixy2SPI_SS &pixy, const int row){
 	uint8_t r, g, b;
 	int keyWhite = 0, checkSwitch = 1;
 
 	for(int i = 0; i < WIDTH; i = i + 2){
 		pixy.video.getRGB(i, row, &r, &g, &b, false);
-		if(check_color(r, b, g) == true){
+		if(isWhite({r, b, g}) == true){
 			if(checkSwitch == 1){
 				keyWhite++;
-				printf("\nkeyWhite: %d", keyWhite);
 				checkSwitch = 0;
 			}
 		} else {
