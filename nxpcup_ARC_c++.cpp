@@ -102,25 +102,16 @@ int main() {
 
             // accelerate/deaccelerate track
             if(readSwitch(kSw2)){
-                whiteBlocks = barcodeScanner(pixy, bottomRow);
+                int whiteBlocks = barcodeScanner(pixy, bottomRow);
 
                 if(whiteBlocks >= 4){
                     if(switchSpeeds == true){
-                        led(kMaskLed1, kLedOn);
                         normalSpeed = 0.25f;
-                        driveMotors(normalSpeed);
                         switchSpeeds = false;
                     } else {
-                        led(kMaskLed2, kLedOn);
                         normalSpeed = 0.125f;
-                        driveMotors(normalSpeed);
                         switchSpeeds = true;
                     }
-                } else if(whiteBlocks >= 2 && whiteBlocks <= 3){
-                    led(kMaskLed3, kLedOn);
-                    normalSpeed = 0.0f;
-                    driveMotors(normalSpeed);
-                }
             }
 
             driveMotor(curveSpeedFactor * normalSpeed);
