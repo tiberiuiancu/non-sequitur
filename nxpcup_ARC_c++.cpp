@@ -82,9 +82,10 @@ int main() {
                     turn(0);
                 }
 
-                if (debugMode) {
+                if (!debugMode) {
                 	driveMotor(normalSpeed);
                 }
+
                 continue;
             }
 
