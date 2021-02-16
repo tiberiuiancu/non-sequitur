@@ -51,89 +51,73 @@ const float servoOffset = 0.085f;
 const float minSpeed = 0.35f;
 const float maxSpeed = 1.0f;
 
-const int middle = WIDTH / 2;
+// buffer should we allocd with size WIDTH
+double* getProcessedImage(Pixy2SPI_SS &pixy, const int row, double* buffer) {
+	// read image and make greyscale
+	int img[WIDTH];
+	uint8_t r, g, b;
+	for (int i = 0; i < WIDTH; ++i) {
+		pixy.video.getRGB(i, row, &r, &g, &b, false);
+		img[i] = (r + g + b) / 3;
+	}
 
-int nSamples = 0;
+	// sobel bs
+	int sobel[WIDTH];
+	sobel[0] = 0;
+	sobel[WIDTH - 1] = 0;
+	for (int i = 1; i < WIDTH - 1; ++i) {
+		sobel[i] = abs(img[i - 1] - img[i + 1]);
+	}
 
-struct rgb {
-    double r, g, b;
+	// non-maximum suppresion
+	const int filter1 = 8;
+	int max_sobel = 0;
+	for (int i = 1; i < WIDTH - 1; ++i) {
+		if (sobel[i] < sobel[i - 1] || sobel[i] < sobel[i + 1] || sobel[i] < filter1) {
+			sobel[i] = 0;
+			continue;
+		}
 
-    rgb(){}
-    rgb(double _r, double _g, double _b) {
-        r = _r;
-        g = _g;
-        b = _b;
-    }
+		if (sobel[i] > max_sobel) {
+			max_sobel = sobel[i];
+		}
+	}
 
-    double getMax() {
-        return max(max(r, g), b);
-    }
-} avg;
+	// gaussian scaling bs
+	const double filter2 = 0.1;
+	for (int i = 0; i < WIDTH; ++i) {
+		if (sobel[i] > 0) {
 
-double cosineSimilarity(rgb a, rgb b) {
-    double top = a.r * b.r + a.g * b.g + a.b * b.b;
-    double bottom = sqrt(a.r * a.r + a.g * a.g + a.b * a.b) * sqrt(b.r * b.r + b.g * b.g + b.b * b.b);
+			double x = (double) sobel[i] / max_sobel;
+			// (e^(x^2 + 5x - 1) - e^-1) / e^5
+			buffer[i] = (exp(x * x + 5 * x - 1) - 0.367879441) / 148.413159103;
+			if (buffer[i] < filter2) {
+				buffer[i] = 0;
+			}
+		} else {
+			buffer[i] = 0;
+		}
+	}
 
-    // angle * ratio between the smaller and the bigger of the vectors
-    return (top / bottom) * ((min(a.getMax(), b.getMax()) / max(a.getMax(), b.getMax())));
+	return buffer;
 }
 
-void addSample(rgb x) {
-    if (nSamples == 0) {
-        avg.r = x.r;
-        avg.g = x.g;
-        avg.b = x.b;
-    } else {
-        avg.r *= ((double) nSamples) / ((double) nSamples + 1);
-        avg.g *= ((double) nSamples) / ((double) nSamples + 1);
-        avg.b *= ((double) nSamples) / ((double) nSamples + 1);
+void getLeftRight(double* filtered_img, int &left, int &right) {
+	left = -1;
+	right = INF;
+	for (int i = 0; i < WIDTH; ++i) {
+		if (filtered_img[i] > 0) {
+			left = i;
+			break;
+		}
+	}
 
-        avg.r += ((double) x.r) / ((double) nSamples + 1);
-        avg.g += ((double) x.g) / ((double) nSamples + 1);
-        avg.b += ((double) x.b) / ((double) nSamples + 1);
-    }
-    nSamples++;
-}
-
-void resetSamples() {
-    nSamples = 0;
-    avg.r = avg.b = avg.g = 0;
-}
-
-bool isWhite(rgb x, bool toAdd=false, double threshold=0.75) {
-    double c = cosineSimilarity(x, avg);
-
-    if (c >= threshold) {
-        if (toAdd) addSample(x);
-        return true;
-    }
-    false;
-}
-
-int getRight(Pixy2SPI_SS &pixy, const int row) {
-    uint8_t r, g, b;
-
-    for (int i = middle; i < WIDTH; i += 2) {
-        pixy.video.getRGB(i, row, &r, &g, &b, false);
-        if (!isWhite({r, g, b}, i - middle < 10)) {
-            return i;
-        }
-    }
-
-    return INF;
-}
-
-int getLeft(Pixy2SPI_SS &pixy, const int row) {
-    uint8_t r, g, b;
-
-    for (int i = middle - 1; i >= 0; i -= 2) {
-        pixy.video.getRGB(i, row, &r, &g, &b, false);
-        if (!isWhite({r, g, b}, middle - i < 10)) {
-            return i;
-        }
-    }
-
-    return -1;
+	for (int i = WIDTH - 1; i >= 0; --i) {
+		if (filtered_img[i] > 0) {
+			right = i;
+			break;
+		}
+	}
 }
 
 // Change led state
@@ -142,6 +126,7 @@ int getLeft(Pixy2SPI_SS &pixy, const int row) {
 void led(LedMaskEnum led, LedStateEnum state) {
     mLeds_Write(led, state);
 }
+
 // Togglezzzzzzzzzzzzzzzzzzzzszzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz led
 void toggleLed(LedMaskEnum led) {
     mLeds_Toggle(led);
@@ -158,6 +143,7 @@ void setLights(float val) {
 bool readSwitch(SwitchEnum sw) {
     return mSwitch_ReadSwitch(sw);
 }
+
 // but: kPushButSW1, kPushButSW2
 bool readButton(PushButEnum but) {
     return mSwitch_ReadPushBut(but);
@@ -173,6 +159,7 @@ void driveMotor(float speed) {
         mTimer_SetMotorDuty(speed * calibrate, speed);
     }
 }
+
 // left: -1 < left < 1 and = left motor
 // right: -1 < right < 1 and = right motor
 void driveMotorIndividual(float left, float right) {

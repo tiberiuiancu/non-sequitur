@@ -15,13 +15,11 @@ int main() {
 
     mDelay_GetDelay(kPit1, 500 / kPit1Period);
 
-    uint8_t r, g, b;
-
     // middle pixel index
     const int middle = WIDTH / 2;
 
     // speed of the car
-    float normalSpeed = 0.32f;
+    float normalSpeed = 0.2f;
 
     // steering multiplier for when the car is going forwards
     const float straightSteerFactor = 0.15f;
@@ -38,7 +36,7 @@ int main() {
     const float straightThreshold = 0.65f;
 
     // if the minimum distance between right and left is smaller than this, don't do anything
-    const int minLRDistance = 130;
+    const int minLRDistance = 50;
 
     // rows camera takes the image from
     const int topRow = 10;
@@ -46,7 +44,6 @@ int main() {
 
     // control variables
     bool debugMode = false;
-    bool reset = true;
 
     // variables to store position of left and right lines
     int left = -1;
@@ -65,19 +62,10 @@ int main() {
 	    }
 
 	    if (readSwitch(kSw1)) {
-	        // add initial color samples
-            if (reset) {
-                resetSamples();
-                for (int i = middle - 2; i < middle + 2; ++i) {
-                    pixy.video.getRGB(i, bottomRow, &r, &g, &b, false);
-                    addSample({r, g, b});
-                }
-                reset = false;
-            }
-
             // check top row for straight lines
-            left = getLeft(pixy, topRow);
-            right = getRight(pixy, topRow);
+	    	double filtered_img[WIDTH];
+
+            getLeftRight(getProcessedImage(pixy, topRow, filtered_img), left, right);
 
             if (debugMode) {
                 printf("upper: %d %d\n", left, right);
@@ -94,20 +82,22 @@ int main() {
                     turn(0);
                 }
 
-                driveMotor(normalSpeed);
+                if (debugMode) {
+                	driveMotor(normalSpeed);
+                }
                 continue;
             }
 
             driveMotor(curveSpeedFactor * normalSpeed);
             // if the top view doesn't see 2 lines switch to close view and control curve
-            left = getLeft(pixy, bottomRow);
-            right = getRight(pixy, bottomRow);
+
+            getLeftRight(getProcessedImage(pixy, bottomRow, filtered_img), left, right);
 
             float leftSpeed = 0;
             float rightSpeed = 0;
 
             if (debugMode) {
-                printf("%d %d\n", left, right);
+                printf("bottom: %d %d\n", left, right);
             }
 
             if (right - left <= minLRDistance) {
@@ -139,7 +129,6 @@ int main() {
                 driveMotorIndividual(leftSpeed, rightSpeed);
             }
         } else {
-	        reset = true;
 	        driveMotor(0);
 	        turn(0);
 	    }
