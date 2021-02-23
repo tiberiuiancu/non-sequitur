@@ -42,15 +42,24 @@ int main() {
     const int topRow = 10;
     const int bottomRow = 100;
 
-    // control variables
-    bool debugMode = false;
-
     // variables to store position of left and right lines
     int left = -1;
     int right = INF;
 
     // center servo
     turn(0);
+
+    // line buffer
+	int lines[WIDTH + 1];
+
+	if (readSwitch(kSw2)) {
+		reset_log();
+	}
+
+	if (readSwitch(kSw3)) {
+		print_log();
+		return 0;
+	}
 
     // main loop
 	while(true) {
@@ -62,14 +71,21 @@ int main() {
 	    }
 
 	    if (readSwitch(kSw1)) {
-            // check top row for straight lines
-	    	int lines[WIDTH + 1];
+	    	toggleLed(kMaskLed1);
 
-            getLeftRight(getProcessedImage(pixy, topRow, lines), left, right);
+	    	log("%lld,", time(NULL));
 
-            if (debugMode) {
-                printf("upper: %d %d\n", left, right);
-            }
+	    	getLeftRight(getProcessedImage(pixy, 100, lines), left, right);
+			log("%d,%d,", left, right);
+
+			getLeftRight(getProcessedImage(pixy, 55, lines), left, right);
+			log("%d,%d,", left, right);
+
+            getLeftRight(getProcessedImage(pixy, 10, lines), left, right);
+            log("%d,%d\n", left, right);
+
+			// getLeftRight(getProcessedImage(pixy, topRow, lines), left, right);
+			// debug("%d,%d\n", left, right);
 
             if (left != -1 && right != INF && right - left > minLRDistance) {
                 // sees 2 lines

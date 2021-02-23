@@ -42,6 +42,17 @@ extern "C"
 #define WIDTH 316
 #define INF 1000
 
+FILE* logfile = NULL;
+
+bool debugMode = false;
+
+#define log(fmt, ...) \
+        fprintf(logfile, fmt, ##__VA_ARGS__);
+
+#define debug(fmt, ...) \
+		if (debugMode) \
+        	printf(fmt, ##__VA_ARGS__);
+
 static Int16 sDly;
 
 // values to calibrate the motors and the servo
@@ -50,6 +61,7 @@ const float servoOffset = 0.085f;
 
 const float minSpeed = 0.35f;
 const float maxSpeed = 1.0f;
+
 
 // buffer should we allocd with size WIDTH + 1
 // returns an int array where the first element is the size and the ones to follow are index values where lines were detected
@@ -109,10 +121,6 @@ void getLeftRight(int* lines, int &left, int &right) {
 	const int min_line_threshold = 30;
 	int line_cnt = lines[0];
 
-	for (int i = 1; i <= line_cnt; ++i) {
-		printf("%d ", lines[i]);
-	}
-
 	puts("\n");
 
 	left = -1;
@@ -160,7 +168,7 @@ void led(LedMaskEnum led, LedStateEnum state) {
     mLeds_Write(led, state);
 }
 
-// Togglezzzzzzzzzzzzzzzzzzzzszzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz led
+// led: kMaskLed1, kMaskLed2, kMaskLed3, kMaskLed4
 void toggleLed(LedMaskEnum led) {
     mLeds_Toggle(led);
 }
@@ -256,6 +264,21 @@ bool isDelayDone(UInt16 delay) {
    return false;
 }
 
+void print_log() {
+	rewind(logfile);
+	char buff;
+	buff = fgetc(logfile);
+	while (buff != EOF) {
+			putchar(buff);
+			buff = fgetc(logfile);
+	}
+}
+
+void reset_log() {
+	logfile = freopen("log.csv", "w", logfile);
+	logfile = freopen("log.csv", "a+", logfile);
+}
+
 // Initialize all the sensors
 void init() {
     mCpu_Setup();
@@ -306,6 +329,9 @@ void init() {
     // UART 4 monitoring image
     mRs232_Setup();
     mRs232_Open();
+
+    // open log file
+    logfile = fopen("log.csv", "a+");
 }
 
 #endif
