@@ -109,6 +109,12 @@ void getLeftRight(int* lines, int &left, int &right) {
 	const int min_line_threshold = 30;
 	int line_cnt = lines[0];
 
+	for (int i = 1; i <= line_cnt; ++i) {
+		printf("%d ", lines[i]);
+	}
+
+	puts("\n");
+
 	left = -1;
 	right = INF;
 
@@ -117,32 +123,32 @@ void getLeftRight(int* lines, int &left, int &right) {
 	}
 
 	if (line_cnt == 4) {
-		left = lines[1];
-		right = lines[2];
+		left = lines[2];
+		right = lines[3];
 	} else if (line_cnt == 3) {
-		if (abs(lines[1] - lines[0]) < abs(lines[1] - lines[2])) {
+		if (abs(lines[2] - lines[1]) < abs(lines[2] - lines[3])) {
+			left = lines[2];
+			right = lines[3];
+		} else {
 			left = lines[1];
 			right = lines[2];
-		} else {
-			left = lines[0];
-			right = lines[1];
 		}
 	} else if (line_cnt == 2) {
-		if (abs(lines[1] - lines[0]) < min_line_threshold) {
-			if (lines[1] < WIDTH / 2) {
-				left = lines[1];
+		if (abs(lines[2] - lines[1]) < min_line_threshold) {
+			if (lines[2] < WIDTH / 2) {
+				left = lines[2];
 			} else {
-				right = lines[1];
+				right = lines[2];
 			}
 		} else {
-			left = lines[0];
-			right = lines[1];
+			left = lines[1];
+			right = lines[2];
 		}
 	} else {
-		if (lines[0] < WIDTH / 2) {
-			left = lines[0];
+		if (lines[1] < WIDTH / 2) {
+			left = lines[1];
 		} else {
-			right = lines[0];
+			right = lines[1];
 		}
 	}
 }
