@@ -51,8 +51,9 @@ const float servoOffset = 0.085f;
 const float minSpeed = 0.35f;
 const float maxSpeed = 1.0f;
 
-// buffer should we allocd with size WIDTH
-double* getProcessedImage(Pixy2SPI_SS &pixy, const int row, double* buffer) {
+// buffer should we allocd with size WIDTH + 1
+// returns an int array where the first element is the size and the ones to follow are index values where lines were detected
+int* getProcessedImage(Pixy2SPI_SS &pixy, const int row, int* buffer) {
 	// read image and make greyscale
 	int img[WIDTH];
 	uint8_t r, g, b;
@@ -85,37 +86,63 @@ double* getProcessedImage(Pixy2SPI_SS &pixy, const int row, double* buffer) {
 
 	// gaussian scaling bs
 	const double filter2 = 0.1;
+	int line_cnt = 0;
 	for (int i = 0; i < WIDTH; ++i) {
 		if (sobel[i] > 0) {
-
+			// normalize between 0 and 1
 			double x = (double) sobel[i] / max_sobel;
-			// (e^(x^2 + 5x - 1) - e^-1) / e^5
-			buffer[i] = (exp(x * x + 5 * x - 1) - 0.367879441) / 148.413159103;
-			if (buffer[i] < filter2) {
-				buffer[i] = 0;
+
+			// apply f(x) = (e^(x^2 + 5x - 1) - e^-1) / e^5
+			x = (exp(x * x + 5 * x - 1) - 0.367879441) / 148.413159103;
+			if (x > filter2) {
+				buffer[++line_cnt] = i;
 			}
-		} else {
-			buffer[i] = 0;
 		}
 	}
+
+	buffer[0] = line_cnt;
 
 	return buffer;
 }
 
-void getLeftRight(double* filtered_img, int &left, int &right) {
+void getLeftRight(int* lines, int &left, int &right) {
+	const int min_line_threshold = 30;
+	int line_cnt = lines[0];
+
 	left = -1;
 	right = INF;
-	for (int i = 0; i < WIDTH; ++i) {
-		if (filtered_img[i] > 0) {
-			left = i;
-			break;
-		}
+
+	if (line_cnt > 4) {
+		return;
 	}
 
-	for (int i = WIDTH - 1; i >= 0; --i) {
-		if (filtered_img[i] > 0) {
-			right = i;
-			break;
+	if (line_cnt == 4) {
+		left = lines[1];
+		right = lines[2];
+	} else if (line_cnt == 3) {
+		if (abs(lines[1] - lines[0]) < abs(lines[1] - lines[2])) {
+			left = lines[1];
+			right = lines[2];
+		} else {
+			left = lines[0];
+			right = lines[1];
+		}
+	} else if (line_cnt == 2) {
+		if (abs(lines[1] - lines[0]) < min_line_threshold) {
+			if (lines[1] < WIDTH / 2) {
+				left = lines[1];
+			} else {
+				right = lines[1];
+			}
+		} else {
+			left = lines[0];
+			right = lines[1];
+		}
+	} else {
+		if (lines[0] < WIDTH / 2) {
+			left = lines[0];
+		} else {
+			right = lines[0];
 		}
 	}
 }

@@ -63,9 +63,9 @@ int main() {
 
 	    if (readSwitch(kSw1)) {
             // check top row for straight lines
-	    	double filtered_img[WIDTH];
+	    	int lines[WIDTH + 1];
 
-            getLeftRight(getProcessedImage(pixy, topRow, filtered_img), left, right);
+            getLeftRight(getProcessedImage(pixy, topRow, lines), left, right);
 
             if (debugMode) {
                 printf("upper: %d %d\n", left, right);
@@ -92,7 +92,7 @@ int main() {
             driveMotor(curveSpeedFactor * normalSpeed);
             // if the top view doesn't see 2 lines switch to close view and control curve
 
-            getLeftRight(getProcessedImage(pixy, bottomRow, filtered_img), left, right);
+            getLeftRight(getProcessedImage(pixy, bottomRow, lines), left, right);
 
             float leftSpeed = 0;
             float rightSpeed = 0;
