@@ -43,11 +43,15 @@ extern "C"
 #define INF 1000
 
 FILE* logfile = NULL;
+const char* log_name = "log.csv";
 
 bool debugMode = false;
 
-#define log(fmt, ...) \
-        fprintf(logfile, fmt, ##__VA_ARGS__);
+#define log_file(fmt, ...) \
+		logfile = fopen(log_name, "w+"); \
+        fprintf(logfile, fmt, ##__VA_ARGS__); \
+        fclose(logfile);
+
 
 #define debug(fmt, ...) \
 		if (debugMode) \
@@ -265,18 +269,20 @@ bool isDelayDone(UInt16 delay) {
 }
 
 void print_log() {
+	logfile = fopen(log_name, "r");
+	fseek(logfile, 0, SEEK_END);
+	long fsize = ftell(logfile);
 	rewind(logfile);
-	char buff;
-	buff = fgetc(logfile);
-	while (buff != EOF) {
-			putchar(buff);
-			buff = fgetc(logfile);
-	}
+
+	char string[fsize + 1];
+	fread(string, 1, fsize, logfile);
+	string[fsize] = 0;
+	printf("%s\n", string);
 }
 
 void reset_log() {
-	logfile = freopen("log.csv", "w", logfile);
-	logfile = freopen("log.csv", "a+", logfile);
+	logfile = fopen(log_name, "w");
+	fclose(logfile);
 }
 
 // Initialize all the sensors
@@ -329,9 +335,6 @@ void init() {
     // UART 4 monitoring image
     mRs232_Setup();
     mRs232_Open();
-
-    // open log file
-    logfile = fopen("log.csv", "a+");
 }
 
 #endif

@@ -52,9 +52,9 @@ int main() {
     // line buffer
 	int lines[WIDTH + 1];
 
-	if (readSwitch(kSw2)) {
-		reset_log();
-	}
+//	if (readSwitch(kSw2)) {
+//		reset_log();
+//	}
 
 	if (readSwitch(kSw3)) {
 		print_log();
@@ -73,16 +73,16 @@ int main() {
 	    if (readSwitch(kSw1)) {
 	    	toggleLed(kMaskLed1);
 
-	    	log("%lld,", time(NULL));
+	    	log_file("%lld,", time(NULL));
 
 	    	getLeftRight(getProcessedImage(pixy, 100, lines), left, right);
-			log("%d,%d,", left, right);
+			log_file("%d,%d,", left, right);
 
 			getLeftRight(getProcessedImage(pixy, 55, lines), left, right);
-			log("%d,%d,", left, right);
+			log_file("%d,%d,", left, right);
 
             getLeftRight(getProcessedImage(pixy, 10, lines), left, right);
-            log("%d,%d\n", left, right);
+            log_file("%d,%d\n", left, right);
 
 			// getLeftRight(getProcessedImage(pixy, topRow, lines), left, right);
 			// debug("%d,%d\n", left, right);
