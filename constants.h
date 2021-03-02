@@ -1,7 +1,6 @@
 #ifndef CONSTANTS_H_
 #define CONSTANTS_H_
 
-
 // speed multiplier for when a curve is detected
 const float curveSpeedFactor = 0.75f;
 const float curveSteerSlowSpeedFactor = 0.15f;

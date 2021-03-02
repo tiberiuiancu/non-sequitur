@@ -39,20 +39,13 @@ bool readButton(PushButEnum but) {
     return mSwitch_ReadPushBut(but);
 }
 
-// Turn on the motor
-// speed: -1 < speed < 1 and = both motors
-void driveMotor(float speed) {
-    if (speed < 0.001f) {
-        mTimer_SetMotorDuty(0, 0);
-    } else {
-        speed = speed * (maxSpeed - minSpeed) + minSpeed;
-        mTimer_SetMotorDuty(speed * calibrate, speed);
-    }
-}
-
 // left: -1 < left < 1 and = left motor
 // right: -1 < right < 1 and = right motor
-void driveMotorIndividual(float left, float right) {
+void driveMotorIndividual(float left, float right, bool cancel = false) {
+	if (cancel) {
+		return;
+	}
+
     if (left < 0.001f) {
         left = 0;
     } else {
@@ -64,6 +57,12 @@ void driveMotorIndividual(float left, float right) {
         right = right * (maxSpeed - minSpeed) + minSpeed;
     }
     mTimer_SetMotorDuty(left * calibrate, right);
+}
+
+// Turn on the motor
+// speed: -1 < speed < 1 and = both motors
+void driveMotor(float speed, bool cancel = false) {
+	driveMotorIndividual(speed, speed, cancel);
 }
 
 // Get the speed of the motor in passed variables

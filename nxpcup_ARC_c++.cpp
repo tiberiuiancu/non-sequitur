@@ -55,14 +55,12 @@ int main() {
                     turn(0);
                 }
 
-                if (!debugMode) {
-                	driveMotor(normalSpeed);
-                }
+				driveMotor(normalSpeed, debugMode);
 
                 continue;
             }
 
-            driveMotor(curveSpeedFactor * normalSpeed);
+            driveMotor(curveSpeedFactor * normalSpeed, debugMode);
             // if the top view doesn't see 2 lines switch to close view and control curve
 
             getLeftRight(getProcessedImage(pixy, bottomRow, lines), left, right);
@@ -70,9 +68,7 @@ int main() {
             float leftSpeed = 0;
             float rightSpeed = 0;
 
-            if (debugMode) {
-                printf("bottom: %d %d\n", left, right);
-            }
+			debug("bottom: %d %d\n", left, right);
 
             if (right - left <= minLRDistance) {
                 continue;
@@ -97,11 +93,7 @@ int main() {
                 leftSpeed = rightSpeed = normalSpeed;
             }
 
-            if (debugMode) {
-                driveMotor(0);
-            } else {
-                driveMotorIndividual(leftSpeed, rightSpeed);
-            }
+			driveMotorIndividual(leftSpeed, rightSpeed, debugMode);
         } else {
 	        driveMotor(0);
 	        turn(0);
