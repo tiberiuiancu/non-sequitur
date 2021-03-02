@@ -21,37 +21,38 @@ public:
 
 	int nCurveFrames = 0; // number of frames we see we have to make a curve
 
+
+
 	DrivingState state;
 
 	Car() {
 		state = straight;
 	}
 
-	bool checkTurn() {
+	void checkTurn() {
 		getProcessedImage(topRow);
 		getLeftRight(topLeft, topRight);
 		debug("Top: %d %d\n", topLeft, topRight);
 
 		if (topLeft == -1 && topRight < INF) {
 			nCurveFrames++;
-			if (nCurveFrames > 1) {
+			if (nCurveFrames > 3) {
 				target = leftSteeringTargetPosition;
 				state = prepareTurn;
 				pixy.setLED(255, 0, 0);
 			}
 		} else if (topLeft > 0 && topRight == INF) {
 			nCurveFrames++;
-			if (nCurveFrames > 1) {
+			if (nCurveFrames > 3) {
 				target = rightSteeringTargetPosition;
 				state = prepareTurn;
 				pixy.setLED(0, 0, 255);
 			}
+		} else {
+			nCurveFrames = 0;
+			state = straight;
+			target = 0.5f;
 		}
-
-		nCurveFrames = 0;
-		state = straight;
-		target = 0.5f;
-		return nCurveFrames > 1;
 	}
 
 	void updatePosition() {
@@ -80,7 +81,7 @@ public:
 		if (abs(rightFraction - target) < maxStraightLineError) {
 			turn(0);
 		} else {
-			turn (rightFraction < target ? -straightSteerFactor : straightSteerFactor);
+			turn(rightFraction < target ? -straightSteerFactor : straightSteerFactor);
 		}
 	}
 

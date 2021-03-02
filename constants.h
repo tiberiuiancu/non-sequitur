@@ -16,7 +16,7 @@ float normalSpeed = 0.2f;
 const float straightSteerFactor = 0.15f;
 
 // steer factor for when we adjust the car position before a curve
-const float precurveAdjustSteerFactor = 0.6f;
+const float precurveAdjustSteerFactor = 0.2f;
 
 // speed multiplier for when an intersection is detected
 const float intersectionSpeedFactor = 0.7f;
