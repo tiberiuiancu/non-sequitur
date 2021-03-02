@@ -1,5 +1,6 @@
 #include "lib.h"
 #include "car.h"
+#include "constants.h"
 
 #define K_MAIN_INTERVAL (100 / kPit1Period)
 
@@ -17,30 +18,6 @@ int main() {
 
     // middle pixel index
     const int middle = WIDTH / 2;
-
-    // speed of the car
-    float normalSpeed = 0.2f;
-
-    // steering multiplier for when the car is going forwards
-    const float straightSteerFactor = 0.15f;
-
-    // speed multiplier for when a curve is detected
-    const float curveSpeedFactor = 0.75f;
-    const float curveSteerSlowSpeedFactor = 0.15f;
-    const float curveSteerFastSpeedFactor = 1.7f;
-
-    // speed multiplier for when an intersection is detected
-    const float intersectionSpeedFactor = 0.7f;
-    
-    // threshold for when the cars is too much to one side in a straight line
-    const float straightThreshold = 0.65f;
-
-    // if the minimum distance between right and left is smaller than this, don't do anything
-    const int minLRDistance = 50;
-
-    // rows camera takes the image from
-    const int topRow = 10;
-    const int bottomRow = 100;
 
     // variables to store position of left and right lines
     int left = -1;
