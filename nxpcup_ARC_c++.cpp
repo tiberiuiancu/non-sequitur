@@ -1,5 +1,5 @@
 #include "lib.h"
-
+#include "car.h"
 
 #define K_MAIN_INTERVAL (100 / kPit1Period)
 
