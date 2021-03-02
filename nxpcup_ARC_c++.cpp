@@ -40,11 +40,16 @@ int main() {
 			car.checkTurn();
 		}
 
-		// update the car's current position
-		car.updatePosition();
+		// if the car is still supposed to go straight
+		if (car.state == straight) {
+			car.straightLineAdjust();
+		} else {
+			// update the car's current position
+			car.updatePosition();
 
-		// steer towards target if necessary
-		car.moveTowardsTarget();
+			// steer towards target if necessary
+			car.moveTowardsTarget();
+		}
 
 		driveMotor(normalSpeed, debugMode);
 	}

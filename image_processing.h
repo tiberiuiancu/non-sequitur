@@ -82,8 +82,6 @@ void getLeftRight(int &left, int &right) {
 	const int min_line_threshold = 30;
 	int line_cnt = lines[0];
 
-	puts("\n");
-
 	left = -1;
 	right = INF;
 

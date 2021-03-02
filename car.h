@@ -6,7 +6,7 @@
 #include <cmath>
 
 enum DrivingState {
-	straight, prepareLeftTurn, prepareRightTurn
+	straight, prepareTurn
 };
 
 class Car {
@@ -19,6 +19,8 @@ public:
 	int bottomLeft = -1; // same as above
 	int bottomRight = INF; // same as above
 
+	int nCurveFrames = 0; // number of frames we see we have to make a curve
+
 	DrivingState state;
 
 	Car() {
@@ -28,20 +30,28 @@ public:
 	bool checkTurn() {
 		getProcessedImage(topRow);
 		getLeftRight(topLeft, topRight);
+		debug("Top: %d %d\n", topLeft, topRight);
+
 		if (topLeft == -1 && topRight < INF) {
-			// left turn
-			state = prepareLeftTurn;
-			target = leftSteeringTargetPosition;
-			return true;
+			nCurveFrames++;
+			if (nCurveFrames > 1) {
+				target = leftSteeringTargetPosition;
+				state = prepareTurn;
+				pixy.setLED(255, 0, 0);
+			}
 		} else if (topLeft > 0 && topRight == INF) {
-			state = prepareRightTurn;
-			target = rightSteeringTargetPosition;
-			return true;
+			nCurveFrames++;
+			if (nCurveFrames > 1) {
+				target = rightSteeringTargetPosition;
+				state = prepareTurn;
+				pixy.setLED(0, 0, 255);
+			}
 		}
 
+		nCurveFrames = 0;
 		state = straight;
 		target = 0.5f;
-		return false;
+		return nCurveFrames > 1;
 	}
 
 	void updatePosition() {
@@ -51,12 +61,12 @@ public:
 		// calculate proportion thing
 		if (bottomLeft > 0 && bottomRight < INF) {
 			// we can see both lines
-			position = ((float)(bottomRight - MIDDLE)) / (bottomRight - bottomLeft);
+			position = ((float)(bottomRight - MIDDLE)) / ((float)(bottomRight - bottomLeft));
 		} else if (bottomLeft > 0) {
 			// we can see the left line
-			position = (float) bottomLeft / bottomLeftLineMax;
+			position = (float) bottomLeft / MIDDLE;
 		} else if (bottomRight < INF) {
-			position = (float) (bottomRight - bottomRightLineMin) / (WIDTH - bottomRightLineMin);
+			position = (float) (bottomRight - MIDDLE) / (WIDTH - MIDDLE);
 		} else {
 			position = 0.5f;
 		}
@@ -64,12 +74,22 @@ public:
 		debug("Car position: %d/100\n", (int) (position * 100));
 	}
 
+	void straightLineAdjust() {
+		float rightFraction = ((float)(topRight - MIDDLE)) / ((float)(topRight - topLeft));
+
+		if (abs(rightFraction - target) < maxStraightLineError) {
+			turn(0);
+		} else {
+			turn (rightFraction < target ? -straightSteerFactor : straightSteerFactor);
+		}
+	}
+
 	void moveTowardsTarget() {
 		if (abs(target - position) < maxPositionError) {
-			return;
+			turn(0);
+		} else {
+			turn(position < target ? -precurveAdjustSteerFactor : precurveAdjustSteerFactor);
 		}
-
-		turn(position < target ? precurveAdjustSteerFactor : -precurveAdjustSteerFactor);
 	}
 };
 

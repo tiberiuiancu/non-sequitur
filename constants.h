@@ -16,13 +16,13 @@ float normalSpeed = 0.2f;
 const float straightSteerFactor = 0.15f;
 
 // steer factor for when we adjust the car position before a curve
-const float precurveAdjustSteerFactor = 0.2f;
+const float precurveAdjustSteerFactor = 0.6f;
 
 // speed multiplier for when an intersection is detected
 const float intersectionSpeedFactor = 0.7f;
 
 // threshold for when the cars is too much to one side in a straight line
-const float straightThreshold = 0.65f;
+const float maxStraightLineError = 0.05f;
 
 // if the minimum distance between right and left is smaller than this, don't do anything
 const int minLRDistance = 50;
@@ -31,11 +31,7 @@ const int minLRDistance = 50;
 const int topRow = 10;
 const int bottomRow = 150;
 
-// horizontal position contstants
-const int bottomRightLineMin = MIDDLE; //previously: 178;
-const int bottomLeftLineMax = MIDDLE; //previously: 118;
-
-// steering target positions
+// steering target positions (before curves)
 const float leftSteeringTargetPosition = 0.8f;
 const float rightSteeringTargetPosition = 0.2f;
 const float maxPositionError = 0.05f;
