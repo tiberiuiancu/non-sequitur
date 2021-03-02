@@ -42,16 +42,7 @@ extern "C"
 #define WIDTH 316
 #define INF 1000
 
-FILE* logfile = NULL;
-const char* log_name = "log.csv";
-
 bool debugMode = false;
-
-#define log_file(fmt, ...) \
-		logfile = fopen(log_name, "w+"); \
-        fprintf(logfile, fmt, ##__VA_ARGS__); \
-        fclose(logfile);
-
 
 #define debug(fmt, ...) \
 		if (debugMode) \
@@ -266,23 +257,6 @@ bool isDelayDone(UInt16 delay) {
        return true;
    }
    return false;
-}
-
-void print_log() {
-	logfile = fopen(log_name, "r");
-	fseek(logfile, 0, SEEK_END);
-	long fsize = ftell(logfile);
-	rewind(logfile);
-
-	char string[fsize + 1];
-	fread(string, 1, fsize, logfile);
-	string[fsize] = 0;
-	printf("%s\n", string);
-}
-
-void reset_log() {
-	logfile = fopen(log_name, "w");
-	fclose(logfile);
 }
 
 // Initialize all the sensors
