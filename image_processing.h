@@ -1,45 +1,15 @@
 #ifndef LIB_H
 #define LIB_H
 
-extern "C"
-{
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-
-#include "board.h"
-#include "peripherals.h"
-#include "pin_mux.h"
-#include "clock_config.h"
-#include "MK64F12.h"
-
-#include "Modules/mSpi.h"
-#include "Modules/mDac.h"
-#include "Modules/mAccelMagneto.h"
-#include "Modules/mGyro.h"
-#include "Modules/mTimer.h"
-#include "Modules/mCpu.h"
-#include "Modules/mSwitch.h"
-#include "Modules/mLeds.h"
-#include "Modules/mAd.h"
-#include "Modules/mDelay.h"
-#include "Modules/mRS232.h"
-#include "Modules/mVL6180x.h"
-
-#include "Applications/gInput.h"
-#include "Applications/gCompute.h"
-#include "Applications/gOutput.h"
-}
-
 #include <ctime>
 #include <cstdlib>
 #include <cmath>
 #include "Pixy/Pixy2SPI_SS.h"
+#include "constants.h"
 
 #define K_MAIN_INTERVAL	(100 / kPit1Period)
 #define kSpeedTabSize 100
 
-#define WIDTH 316
 #define INF 1000
 
 bool debugMode = false;
@@ -51,9 +21,12 @@ Pixy2SPI_SS pixy;
 		if (debugMode) \
         	printf(fmt, ##__VA_ARGS__);
 
+// line buffer
+int lines[WIDTH + 1];
+
 // buffer should we allocd with size WIDTH + 1
 // returns an int array where the first element is the size and the ones to follow are index values where lines were detected
-int* getProcessedImage(const int row, int* buffer) {
+int* getProcessedImage(const int row) {
 	// read image and make greyscale
 	int img[WIDTH];
 	uint8_t r, g, b;
@@ -95,17 +68,17 @@ int* getProcessedImage(const int row, int* buffer) {
 			// apply f(x) = (e^(x^2 + 5x - 1) - e^-1) / e^5
 			x = (exp(x * x + 5 * x - 1) - 0.367879441) / 148.413159103;
 			if (x > filter2) {
-				buffer[++line_cnt] = i;
+				lines[++line_cnt] = i;
 			}
 		}
 	}
 
-	buffer[0] = line_cnt;
+	lines[0] = line_cnt;
 
-	return buffer;
+	return lines;
 }
 
-void getLeftRight(int* lines, int &left, int &right) {
+void getLeftRight(int &left, int &right) {
 	const int min_line_threshold = 30;
 	int line_cnt = lines[0];
 

@@ -1,167 +1,76 @@
 #ifndef CAR_H_
 #define CAR_H_
 
-static Int16 sDly;
+#include "image_processing.h"
+#include "hardware.h"
+#include <cmath>
 
-// values to calibrate the motors and the servo
-const float calibrate = 0.965f;
-const float servoOffset = 0.085f;
+enum DrivingState {
+	straight, prepareLeftTurn, prepareRightTurn
+};
 
-const float minSpeed = 0.35f;
-const float maxSpeed = 1.0f;
+class Car {
+public:
+	float position = 0.5f; // horiontal car position: < 0.5 = it's on the right, > 0.5 = it's on the left, 0.5 = middle
+	float target = 0.5f; // horizontal car target: same as above
+	float targetSpeed = 0; // between 0 and 1, target speed of car
+	int topLeft = -1; // where the left Line is detected, between 0 and WIDTH
+	int topRight= INF; // where the right line is detected, between 0 and WIDTH
+	int bottomLeft = -1; // same as above
+	int bottomRight = INF; // same as above
 
-// Change led state
-// led: kMaskLed1, kMaskLed2, kMaskLed3, kMaskLed4
-// state: kLedOff, kLedOn
-void led(LedMaskEnum led, LedStateEnum state) {
-    mLeds_Write(led, state);
-}
+	DrivingState state;
 
-// led: kMaskLed1, kMaskLed2, kMaskLed3, kMaskLed4
-void toggleLed(LedMaskEnum led) {
-    mLeds_Toggle(led);
-}
-
-void setLights(float val) {
-    if (val < -1) val = -1;
-    else if (val > 1) val = 1;
-    mDac_SetDac0Output((val + 1.0) / 2.0);
-}
-
-// Check if switch is turned on
-// sw: kSw1, kSw2, kSw3, kSw4
-bool readSwitch(SwitchEnum sw) {
-    return mSwitch_ReadSwitch(sw);
-}
-
-// but: kPushButSW1, kPushButSW2
-bool readButton(PushButEnum but) {
-    return mSwitch_ReadPushBut(but);
-}
-
-// left: -1 < left < 1 and = left motor
-// right: -1 < right < 1 and = right motor
-void driveMotorIndividual(float left, float right, bool cancel = false) {
-	if (cancel) {
-		return;
+	Car() {
+		state = straight;
 	}
 
-    if (left < 0.001f) {
-        left = 0;
-    } else {
-        left = left * (maxSpeed - minSpeed) + minSpeed;
-    }
-    if (right < 0.001f) {
-        right = 0;
-    } else {
-        right = right * (maxSpeed - minSpeed) + minSpeed;
-    }
-    mTimer_SetMotorDuty(left * calibrate, right);
-}
+	bool checkTurn() {
+		getProcessedImage(topRow);
+		getLeftRight(topLeft, topRight);
+		if (topLeft == -1 && topRight < INF) {
+			// left turn
+			state = prepareLeftTurn;
+			target = leftSteeringTargetPosition;
+			return true;
+		} else if (topLeft > 0 && topRight == INF) {
+			state = prepareRightTurn;
+			target = rightSteeringTargetPosition;
+			return true;
+		}
 
-// Turn on the motor
-// speed: -1 < speed < 1 and = both motors
-void driveMotor(float speed, bool cancel = false) {
-	driveMotorIndividual(speed, speed, cancel);
-}
+		state = straight;
+		target = 0.5f;
+		return false;
+	}
 
-// Get the speed of the motor in passed variables
-void motorSpeed(float *left, float *right) {
-    mTimer_GetSpeed(*&left, *&right);
-}
+	void updatePosition() {
+		getProcessedImage(bottomRow);
+		getLeftRight(bottomLeft, bottomRight);
 
-// side: 0 left, 1 right
-float motorSpeedSide(int side) {
-    float aSpeedMotLeft;
-    float aSpeedMotRight;
-    mTimer_GetSpeed(&aSpeedMotLeft, &aSpeedMotRight);
-    switch (side) {
-        case 0:
-            return aSpeedMotLeft;
-        case 1:
-            return aSpeedMotRight;
-        default:
-            return 0;
-    }
-}
+		// calculate proportion thing
+		if (bottomLeft > 0 && bottomRight < INF) {
+			// we can see both lines
+			position = ((float)(bottomRight - MIDDLE)) / (bottomRight - bottomLeft);
+		} else if (bottomLeft > 0) {
+			// we can see the left line
+			position = (float) bottomLeft / bottomLeftLineMax;
+		} else if (bottomRight < INF) {
+			position = (float) (bottomRight - bottomRightLineMin) / (WIDTH - bottomRightLineMin);
+		} else {
+			position = 0.5f;
+		}
 
-// Turn the servo
-// pos: -1 < pos < 1
-void turn(float pos) {
-    pos += servoOffset;
-    if (pos < -1.0f)
-        pos = -1.0f;
-    if (pos > 1.0f)
-        pos = 1.0f;
-    mTimer_SetServoDuty(0, pos);
-}
+		debug("Car position: %d/100\n", (int) (position * 100));
+	}
 
-// Read from sensors
-// sIMotLeft, sIMotRight: Current going through motor
-// sUBatt: Voltage through battery
-// kPot1, kPot2: Potentiometers
-float readSensor(ADCInputEnum sensor) {
-    return mAd_Read(sensor);
-}
+	void moveTowardsTarget() {
+		if (abs(target - position) < maxPositionError) {
+			return;
+		}
 
-bool isDelayDone(UInt16 delay) {
-   if (mDelay_IsDelayDone(kPit1,sDly)) {
-       mDelay_ReStart(kPit1, sDly, delay / kPit1Period);
-       return true;
-   }
-   return false;
-}
-
-// Initialize all the sensors
-void init() {
-    mCpu_Setup();
-
-    // Config and start switches and pushers
-    mSwitch_Setup();
-    mSwitch_Open();
-
-    // Config and start of LEDs
-    mLeds_Setup();
-    mLeds_Open();
-
-    // Config and start of ADC
-    mAd_Setup();
-    mAd_Open();
-
-    // Config and start of SPI
-    mSpi_Setup();
-    mSpi_Open();
-
-    // Config and start non-blocking delay by PIT
-    mDelay_Setup();
-    mDelay_Open();
-
-    // Timer Config for Speed Measurement and PWM Outputs for Servos
-    mTimer_Setup();
-    mTimer_Open();
-
-    // Setup FXOS8700CQ
-    mAccelMagneto_Setup();
-    mAccelMagneto_Open();
-
-    // Setup FXAS21002C
-    mGyro_Setup();
-    mGyro_Open();
-
-    // Config and start of the DAC0 used to drive the driver LED lighting
-    mDac_Setup();
-    mDac_Open();
-
-    // Setup and start of motor and servo PWM controls and speed measurement
-    mTimer_Setup();
-    mTimer_Open();
-
-    // Enable IRQ at the CPU -> Primask
-    __enable_irq();
-
-    // UART 4 monitoring image
-    mRs232_Setup();
-    mRs232_Open();
-}
+		turn(position < target ? precurveAdjustSteerFactor : -precurveAdjustSteerFactor);
+	}
+};
 
 #endif

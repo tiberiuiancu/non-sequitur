@@ -1,8 +1,5 @@
-#include "lib.h"
+#include "hardware.h"
 #include "car.h"
-#include "constants.h"
-
-#define K_MAIN_INTERVAL (100 / kPit1Period)
 
 #define kSpeedTabSize 100
 
@@ -10,21 +7,14 @@ int main() {
 	init();
 	pixy.init();
 	pixy.setLED(0, 255, 0);
+	pixy.changeProg("video");
 
     mDelay_GetDelay(kPit1, 500 / kPit1Period);
-
-    // middle pixel index
-    const int middle = WIDTH / 2;
-
-    // variables to store position of left and right lines
-    int left = -1;
-    int right = INF;
 
     // center servo
     turn(0);
 
-    // line buffer
-	int lines[WIDTH + 1];
+    Car car = Car();
 
     // main loop
 	while(true) {
@@ -35,66 +25,27 @@ int main() {
 	    	debugMode = false;
 	    }
 
+	    // cancel if switch 1 is off
 	    if (!readSwitch(kSw1)) {
 	    	turn(0);
 	    	driveMotor(0);
 	    	continue;
 	    }
 
+	    // toggle leds to know its fps
 		toggleLed(kMaskLed1);
 
-		getLeftRight(getProcessedImage(topRow, lines), left, right);
-		debug("%d,%d\n", left, right);
-
-		if (left != -1 && right != INF && right - left > minLRDistance) {
-			// sees 2 lines
-			float rightFraction = ((float)(right - middle)) / ((float)(right - left));
-			if (rightFraction > straightThreshold) {
-				turn(straightSteerFactor);
-			} else if (rightFraction < 1 - straightThreshold) {
-				turn(-straightSteerFactor);
-			} else {
-				turn(0);
-			}
-
-			driveMotor(normalSpeed, debugMode);
-
-			continue;
+		// check if the car needs to adjust the position
+		if (car.state == straight) {
+			car.checkTurn();
 		}
 
-		driveMotor(curveSpeedFactor * normalSpeed, debugMode);
-		// if the top view doesn't see 2 lines switch to close view and control curve
+		// update the car's current position
+		car.updatePosition();
 
-		getLeftRight(getProcessedImage(bottomRow, lines), left, right);
+		// steer towards target if necessary
+		car.moveTowardsTarget();
 
-		float leftSpeed = 0;
-		float rightSpeed = 0;
-
-		debug("bottom: %d %d\n", left, right);
-
-		if (right - left <= minLRDistance) {
-			continue;
-		}
-
-		if (right == INF && left == -1) {
-			// probably intersection
-			leftSpeed = rightSpeed = intersectionSpeedFactor * normalSpeed;
-			turn(0);
-		} else if (right == INF) {
-			// probably right turn
-			turn(1);
-			rightSpeed = curveSteerSlowSpeedFactor * normalSpeed;
-			leftSpeed = curveSteerFastSpeedFactor * normalSpeed;
-		} else if (left == -1) {
-			// probably left turn
-			turn(-1);
-			rightSpeed = curveSteerFastSpeedFactor * normalSpeed;
-			leftSpeed = curveSteerSlowSpeedFactor *  normalSpeed;
-		} else {
-			turn(0);
-			leftSpeed = rightSpeed = normalSpeed;
-		}
-
-		driveMotorIndividual(leftSpeed, rightSpeed, debugMode);
+		driveMotor(normalSpeed, debugMode);
 	}
 }
