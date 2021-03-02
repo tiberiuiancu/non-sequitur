@@ -44,13 +44,16 @@ extern "C"
 
 bool debugMode = false;
 
+// Pixycam
+Pixy2SPI_SS pixy;
+
 #define debug(fmt, ...) \
 		if (debugMode) \
         	printf(fmt, ##__VA_ARGS__);
 
 // buffer should we allocd with size WIDTH + 1
 // returns an int array where the first element is the size and the ones to follow are index values where lines were detected
-int* getProcessedImage(Pixy2SPI_SS &pixy, const int row, int* buffer) {
+int* getProcessedImage(const int row, int* buffer) {
 	// read image and make greyscale
 	int img[WIDTH];
 	uint8_t r, g, b;
