@@ -40,7 +40,8 @@ int main() {
 
 		if (car.straightLineAdjust()) {
 			car.steer();
-		} else if (car.curveSteer()) {
+		} else {
+			car.computeCurveSteer();
 			car.steer();
 		}
 

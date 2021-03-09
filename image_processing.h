@@ -44,26 +44,31 @@ int* getProcessedImage(const int row) {
 	}
 
 	// non-maximum suppresion
-	const int filter1 = 8;
+	const int filter1 = 15;
 	int max_sobel = 0;
+	int suppr[WIDTH];
+	suppr[0] = 0;
 	for (int i = 1; i < WIDTH - 1; ++i) {
 		if (sobel[i] < sobel[i - 1] || sobel[i] < sobel[i + 1] || sobel[i] < filter1) {
-			sobel[i] = 0;
+			suppr[i] = 0;
 			continue;
 		}
 
-		if (sobel[i] > max_sobel) {
-			max_sobel = sobel[i];
+		suppr[i] = sobel[i];
+		if (suppr[i] > max_sobel) {
+			max_sobel = suppr[i];
 		}
 	}
 
+	suppr[WIDTH - 1] = 0;
+
 	// gaussian scaling bs
-	const double filter2 = 0.1;
+	const double filter2 = 0.15;
 	int line_cnt = 0;
 	for (int i = 0; i < WIDTH; ++i) {
-		if (sobel[i] > 0) {
+		if (suppr[i] > 0) {
 			// normalize between 0 and 1
-			double x = (double) sobel[i] / max_sobel;
+			double x = (double) suppr[i] / max_sobel;
 
 			// apply f(x) = (e^(x^2 + 5x - 1) - e^-1) / e^5
 			x = (exp(x * x + 5 * x - 1) - 0.367879441) / 148.413159103;
@@ -85,7 +90,7 @@ void getLeftRight(int &left, int &right) {
 	left = -INF;
 	right = INF;
 
-	if (line_cnt > 4) {
+	if (line_cnt == 0 || line_cnt > 4) {
 		return;
 	}
 
