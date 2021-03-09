@@ -35,21 +35,11 @@ int main() {
 	    // toggle leds to know its fps
 		toggleLed(kMaskLed1);
 
-		// check if the car needs to adjust the position
-		if (car.state == straight) {
-			car.checkTurn();
-		}
+		// reset some variables
+		car.startFrame();
 
-		// if the car is still supposed to go straight
-		if (car.state == straight) {
-			car.straightLineAdjust();
-		} else {
-			// update the car's current position
-			car.updatePosition();
-
-			// steer towards target if necessary
-			car.moveTowardsTarget();
-		}
+		turn(car.straightLineAdjust());
+		turn(car.curveTurnAmount());
 
 		driveMotor(normalSpeed, debugMode);
 	}

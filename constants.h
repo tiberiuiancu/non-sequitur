@@ -31,9 +31,9 @@ const int minLRDistance = 50;
 const int topRow = 10;
 const int bottomRow = 150;
 
-// steering target positions (before curves)
-const float leftSteeringTargetPosition = 0.8f;
-const float rightSteeringTargetPosition = 0.2f;
-const float maxPositionError = 0.05f;
+// number of frames until we consider we have to turn
+const int minCurveFrames = 2;
+
+float curveSteerFactor = 1;
 
 #endif
