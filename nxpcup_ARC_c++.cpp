@@ -38,8 +38,11 @@ int main() {
 		// reset some variables
 		car.startFrame();
 
-		turn(car.straightLineAdjust());
-		turn(car.curveTurnAmount());
+		if (car.straightLineAdjust()) {
+			car.steer();
+		} else if (car.curveSteer()) {
+			car.steer();
+		}
 
 		driveMotor(normalSpeed, debugMode);
 	}

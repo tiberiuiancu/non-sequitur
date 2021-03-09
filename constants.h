@@ -28,11 +28,11 @@ const float maxStraightLineError = 0.05f;
 const int minLRDistance = 50;
 
 // rows camera takes the image from
-const int topRow = 10;
-const int bottomRow = 150;
+const int topRow = 70;
+const int bottomRow = 200;
 
 // number of frames until we consider we have to turn
-const int minCurveFrames = 2;
+const int minCurveFrames = 1;
 
 float curveSteerFactor = 1;
 

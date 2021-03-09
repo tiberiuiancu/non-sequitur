@@ -11,6 +11,7 @@ private:
 	bool bottomUpdated = false;
 	bool turnChecked = false;
 	int curveFrames = 0; // 0 = straight line, < 0 = left turn frames, > 0 = right turn frames
+	float steerAmt = 0;
 
 public:
 	float targetSpeed = 0; // between 0 and 1, target speed of car
@@ -20,7 +21,6 @@ public:
 	int bottomRight = INF; // same as above
 
 	int toTurn = 0; // variable that says whether the car has turned once we have detected a curve ahead; < 0 = left, 0 = don't turn, > 0 = right
-
 
 	Car() {}
 
@@ -57,98 +57,90 @@ public:
 			curveFrames = 0;
 		}
 
-		if (abs(curveFrames) > minCurveFrames) {
+		if (abs(curveFrames) >= minCurveFrames) {
 			toTurn = curveFrames;
 		}
 
 		turnChecked = true;
 	}
 
-//	void updatePosition() {
-//		getProcessedImage(bottomRow);
-//		getLeftRight(bottomLeft, bottomRight);
-//
-//		// calculate proportion thing
-//		if (bottomLeft > 0 && bottomRight < INF) {
-//			// we can see both lines
-//			position = ((float)(bottomRight - MIDDLE)) / ((float)(bottomRight - bottomLeft));
-//		} else if (bottomLeft > 0) {
-//			// we can see the left line
-//			position = (float) bottomLeft / MIDDLE;
-//		} else if (bottomRight < INF) {
-//			position = (float) (bottomRight - MIDDLE) / (WIDTH - MIDDLE);
-//		} else {
-//			position = 0.5f;
-//		}
-//
-//		debug("Car position: %d/100\n", (int) (position * 100));
-//	}
-
 	bool isStraightLine() {
 		checkTurn();
-		return abs(curveFrames) > 0;
+		return curveFrames == 0;
 	}
 
-	float straightLineAdjust() {
+	bool straightLineAdjust() {
 		updateTop();
+
+		steerAmt = 0;
 
 		// if we are supposed to turn, don't adjust
 		if (!isStraightLine()) {
-			return 0;
+			return false;
 		}
 
 		// if we can't see both lines, return
 		if (topLeft == -INF || topRight == INF) {
-			return 0;
+			return false;
 		}
 
 		float rightFraction = ((float)(topRight - MIDDLE)) / ((float)(topRight - topLeft));
-
-		if (abs(rightFraction - 0.5f) < maxStraightLineError) {
-			return 0;
-		} else {
-			return (rightFraction < 0.5f ? -straightSteerFactor : straightSteerFactor);
+		debug("Right fraction: %d/100\n", (int)(rightFraction * 100));
+		if (abs(rightFraction - 0.5f) > maxStraightLineError) {
+			// if we deviate enmough from the middle, steer
+			steerAmt = (rightFraction < 0.5f ? -straightSteerFactor : straightSteerFactor);
 		}
+
+		return true;
 	}
 
 	// returns the amount the car should turn if there's a curve; 0 if there isn't a curve
-	float curveTurnAmount() {
+	bool curveSteer() {
 		checkTurn();
 		updateBottom();
 
+		steerAmt = 0;
+
 		// if we haven't detected a curve, don't turn
 		if (toTurn == 0) {
-			return 0;
-		}
-
-		if (bottomLeft > -INF && bottomRight < INF) {
-			// we can see both lines, don't turn
-			return 0;
+			return false;
 		}
 
 		// we can see no line; probably intersection
 		if (bottomLeft == -INF && bottomRight == INF) {
-			return 0;
+			return false;
 		}
 
-		// we see a right turn
-		if (bottomLeft > -INF && bottomRight == INF) {
+		if (bottomLeft > -INF && bottomRight < INF) {
+			// we can see both lines, probably finished a curve
+			steerAmt = 0;
+		} else if (bottomLeft > -INF && bottomRight == INF) {
+			// we can see right turn
+
 			if (toTurn < 0) {
-				// prior information says to turn left; do nothing for now
-				return 0;
+				// probably finished a curve
+				steerAmt = 0;
+				toTurn = 0; // stop steering afterwards
+			} else {
+				steerAmt = curveSteerFactor;
 			}
+		} else if (bottomLeft == -INF && bottomRight < INF) {
+			// we can see left turn
 
-			return curveSteerFactor;
-		}
-
-		if (bottomLeft == -INF && bottomRight < INF) {
 			if (toTurn > 0) {
-				// prior information says to turn right; do nothing for now
-				return 0;
+				// probably finished a curve
+				steerAmt = 0;
+				toTurn = 0; // stop steering afterwards
+			} else {
+				steerAmt = -curveSteerFactor;
 			}
-
-			return -curveSteerFactor;
 		}
+
+		return true;
+	}
+
+	void steer() {
+		turn(steerAmt);
 	}
 };
 
