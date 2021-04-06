@@ -21,114 +21,55 @@ Pixy2SPI_SS pixy;
 		if (debugMode) \
         	printf(fmt, ##__VA_ARGS__);
 
-// line buffer
-int lines[WIDTH + 1];
+int img[WIDTH];
+int nSamples = 0;
+float avgWhite = 0;
 
-// buffer should we allocd with size WIDTH + 1
-// returns an int array where the first element is the size and the ones to follow are index values where lines were detected
 int* getProcessedImage(const int row) {
 	// read image and make greyscale
-	int img[WIDTH];
 	uint8_t r, g, b;
 	for (int i = 0; i < WIDTH; ++i) {
 		pixy.video.getRGB(i, row, &r, &g, &b, false);
 		img[i] = (r + g + b) / 3;
 	}
 
-	// smooth brain
-	int smooth[WIDTH];
-	smooth[0] = img[0];
-	smooth[WIDTH - 1] = img[WIDTH - 1];
-	for (int i = 1; i < WIDTH - 1; ++i) {
-		smooth[i] = (img[i - 1] + 2 * img[i] + img[i + 1]) / 4;
-	}
+	return img;
+}
 
-	// sobel bs
-	int sobel[WIDTH];
-	sobel[0] = 0;
-	sobel[WIDTH - 1] = 0;
-	for (int i = 1; i < WIDTH - 1; ++i) {
-		sobel[i] = abs(smooth[i - 1] - smooth[i + 1]);
-	}
+void addSample(int color) {
+	nSamples++;
+	avgWhite = avgWhite * (1.0f * (nSamples - 1) / nSamples + 1);
+	avgWhite += 1.0f * color / nSamples;
+}
 
-	// non-maximum suppresion
-	const int filter1 = 12;
-	int max_sobel = 0;
-	int suppr[WIDTH];
-	suppr[0] = 0;
-	for (int i = 1; i < WIDTH - 1; ++i) {
-		if (sobel[i] < sobel[i - 1] || sobel[i] < sobel[i + 1] || sobel[i] < filter1) {
-			suppr[i] = 0;
-			continue;
-		}
-
-		suppr[i] = sobel[i];
-		if (suppr[i] > max_sobel) {
-			max_sobel = suppr[i];
-		}
-	}
-
-	suppr[WIDTH - 1] = 0;
-
-	// gaussian scaling bs
-	const double filter2 = 0.1;
-	int line_cnt = 0;
-	for (int i = 0; i < WIDTH; ++i) {
-		if (suppr[i] > 0) {
-			// normalize between 0 and 1
-			double x = (double) suppr[i] / max_sobel;
-
-			// apply f(x) = (e^(x^2 + 5x - 1) - e^-1) / e^5
-			x = (exp(x * x + 5 * x - 1) - 0.367879441) / 148.413159103;
-			if (x > filter2) {
-				lines[++line_cnt] = i;
-			}
-		}
-	}
-
-	lines[0] = line_cnt;
-
-	return lines;
+bool isWhite(int color, float threshold=0.1f) {
+	float err = fabs(avgWhite - color) / avgWhite;
+	debug("%d/100\n", (int) (err * 100));
+	return err < threshold;
 }
 
 void getLeftRight(int &left, int &right) {
-	const int min_line_threshold = 30;
-	int line_cnt = lines[0];
-
 	left = -INF;
 	right = INF;
 
-	if (line_cnt == 0 || line_cnt > 4) {
-		return;
+	if (nSamples == 0) {
+		// assume that the middle is white, so we add samples from the middle of the image
+		for (int i = WIDTH / 2 - 2; i <= WIDHT / 2 + 2; ++i) {
+			addSample(img[i]);
+		}
 	}
 
-	if (line_cnt == 4) {
-		left = lines[2];
-		right = lines[3];
-	} else if (line_cnt == 3) {
-		if (abs(lines[2] - lines[1]) < abs(lines[2] - lines[3])) {
-			left = lines[2];
-			right = lines[3];
-		} else {
-			left = lines[1];
-			right = lines[2];
+	for (int i = WIDTH / 2; i < WIDTH; ++i) {
+		if (!isWhite(img[i])) {
+			right = i;
+			break;
 		}
-	} else if (line_cnt == 2) {
-		if (abs(lines[2] - lines[1]) < min_line_threshold) {
-			if (lines[2] < WIDTH / 2) {
-				left = lines[2];
-			} else {
-				right = lines[2];
-			}
-		} else {
-			left = lines[1];
-			right = lines[2];
-		}
-	} else {
-		if (lines[1] < WIDTH / 2) {
-			left = lines[1];
-		} else {
-			right = lines[1];
+	}
+
+	for (int i = WIDHT / 2; i >= 0; --i) {
+		if (!isWhite(img[i])) {
+			left = i;
+			break;
 		}
 	}
 }
