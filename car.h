@@ -47,7 +47,7 @@ public:
 
 	bool isStraightLine() {
 		updateTop();
-		return topLeft > -INF && topRight < INF;
+		return topLeft > -INF && topRight < INF && topRight - topLeft > minLRDistance;
 	}
 
 	bool straightLineAdjust() {

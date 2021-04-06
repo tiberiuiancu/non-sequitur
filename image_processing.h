@@ -35,16 +35,24 @@ int* getProcessedImage(const int row) {
 		img[i] = (r + g + b) / 3;
 	}
 
+	// smooth brain
+	int smooth[WIDTH];
+	smooth[0] = img[0];
+	smooth[WIDTH - 1] = img[WIDTH - 1];
+	for (int i = 1; i < WIDTH - 1; ++i) {
+		smooth[i] = (img[i - 1] + 2 * img[i] + img[i + 1]) / 4;
+	}
+
 	// sobel bs
 	int sobel[WIDTH];
 	sobel[0] = 0;
 	sobel[WIDTH - 1] = 0;
 	for (int i = 1; i < WIDTH - 1; ++i) {
-		sobel[i] = abs(img[i - 1] - img[i + 1]);
+		sobel[i] = abs(smooth[i - 1] - smooth[i + 1]);
 	}
 
 	// non-maximum suppresion
-	const int filter1 = 15;
+	const int filter1 = 12;
 	int max_sobel = 0;
 	int suppr[WIDTH];
 	suppr[0] = 0;
@@ -63,7 +71,7 @@ int* getProcessedImage(const int row) {
 	suppr[WIDTH - 1] = 0;
 
 	// gaussian scaling bs
-	const double filter2 = 0.15;
+	const double filter2 = 0.1;
 	int line_cnt = 0;
 	for (int i = 0; i < WIDTH; ++i) {
 		if (suppr[i] > 0) {

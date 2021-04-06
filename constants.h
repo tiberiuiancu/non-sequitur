@@ -25,7 +25,7 @@ const float intersectionSpeedFactor = 0.7f;
 const float maxStraightLineError = 0.05f;
 
 // if the minimum distance between right and left is smaller than this, don't do anything
-const int minLRDistance = 50;
+const int minLRDistance = 40;
 
 // rows camera takes the image from
 const int topRow = 10;
