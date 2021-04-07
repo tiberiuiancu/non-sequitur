@@ -28,7 +28,7 @@ const float maxStraightLineError = 0.05f;
 const int minLRDistance = 40;
 
 // rows camera takes the image from
-const int topRow = 10;
+const int topRow = 25;
 const int bottomRow = 100;
 
 // number of frames until we consider we have to turn
