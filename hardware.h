@@ -6,6 +6,7 @@ extern "C"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "board.h"
 #include "peripherals.h"
@@ -51,6 +52,19 @@ void toggleLed(LedMaskEnum led) {
     mLeds_Toggle(led);
 }
 
+// led: kMaskLed1, kMaskLed2, kMaskLed3, kMaskLed4
+void enableSingleLed(LedMaskEnum ledMask) {
+	for(int i = 0; i < 4; i++) {
+		LedMaskEnum powerLed = (LedMaskEnum)pow(2, i);
+
+		if(powerLed == ledMask) {
+			led(powerLed, kLedOn);
+		} else {
+			led(powerLed, kLedOff);
+		}
+	}
+}
+
 void setLights(float val) {
     if (val < -1) val = -1;
     else if (val > 1) val = 1;
@@ -85,6 +99,8 @@ void driveMotorIndividual(float left, float right, bool cancel = false) {
     } else {
         right = right * (maxSpeed - minSpeed) + minSpeed;
     }
+
+    // We calibrate the left motor because it's faster than the right one
     mTimer_SetMotorDuty(left * calibrate, right);
 }
 

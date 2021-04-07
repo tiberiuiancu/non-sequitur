@@ -6,7 +6,7 @@
 
 // speed multiplier for when a curve is detected
 const float curveSpeedFactor = 0.5f;
-const float curveSteerSlowSpeedFactor = 0.3f;
+const float curveSteerSlowSpeedFactor = 0.25f;
 const float curveSteerFastSpeedFactor = 1.5f;
 
 // speed of the car

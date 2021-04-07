@@ -39,12 +39,15 @@ public:
         switch (getTrackType()) {
             case Straight:
                 straightAdjust();
+                enableSingleLed(kMaskLed2);
                 break;
             case Corner:
                 cornerAdjust();
+                enableSingleLed(kMaskLed3);
                 break;
             case Intersection:
                 intersectionAdjust();
+                enableSingleLed(kMaskLed4);
                 break;
         }
 
