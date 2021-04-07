@@ -5,6 +5,12 @@
 #include "hardware.h"
 #include <cmath>
 
+enum TrackType {
+    Straight,
+    Corner,
+    Intersection
+};
+
 class Car {
 private:
 	bool topUpdated = false;
@@ -29,17 +35,21 @@ public:
 		bottomUpdated = false;
 		turnChecked = false;
 
-		// If on straight line, small adjust only
-        if (isStraightLine()) {
-            straightLineAdjust();
-        }
-        // Else steer hard
-        else {
-            computeCurveSteer();
+        // If on straight line, small adjust only
+        switch (getTrackType()) {
+            case Straight:
+                straightAdjust();
+                break;
+            case Corner:
+                cornerAdjust();
+                break;
+            case Intersection:
+                intersectionAdjust();
+                break;
         }
 
         turn(steerAmt);
-        driveMotorIndividual(targetSpeedLeft, targetSpeedRight);
+        driveMotorIndividual(targetSpeedLeft, targetSpeedRight, debugMode);
 	}
 
 	void updateTop() {
@@ -60,17 +70,16 @@ public:
 		debug("Bottom: %d %d\n", bottomLeft, bottomRight);
 	}
 
-	bool isStraightLine() {
+	int getTrackType() {
         updateTop();
 
-        // if we can't see both lines, return
-        if (topLeft == -INF || topRight == INF) {
-            return false;
-        } else if(topLeft == -INF && topRight == INF) {
-        	return false;
+        if(topLeft == -INF && topRight == INF) {
+            return Intersection;
+        } if (topLeft == -INF || topRight == INF) {
+            return Corner;
         }
 
-		return topRight - topLeft > minLRDistance;
+		return topRight - topLeft > minLRDistance ? Straight : Corner;
 	}
 
 	float getSteerAmt(int right, int left) {
@@ -84,28 +93,33 @@ public:
         }
 	}
 
-	void straightLineAdjust() {
+	void straightAdjust() {
 		updateTop();
 		steerAmt = getSteerAmt(topRight, topLeft);
 		targetSpeedLeft = targetSpeedRight = normalSpeed;
 	}
 
 	// returns the amount the car should turn if there's a curve; 0 if there isn't a curve
-	void computeCurveSteer() {
-		updateBottom();
+    void cornerAdjust() {
+        updateBottom();
 
-		if (bottomLeft > -INF && bottomRight == INF) {
-			// we can see the left line, i.e. right turn
-			steerAmt = curveSteerFactor;
+        if (bottomLeft > -INF && bottomRight == INF) {
+            // we can see the left line, i.e. right turn
+            steerAmt = curveSteerFactor;
             targetSpeedRight = normalSpeed * curveSteerSlowSpeedFactor * curveSpeedFactor;
             targetSpeedLeft = normalSpeed * curveSteerFastSpeedFactor * curveSpeedFactor;
-		} else if (bottomLeft == -INF && bottomRight < INF) {
-			// we can see the right line, i.e. left turn
-			steerAmt = -curveSteerFactor;
-			targetSpeedLeft = normalSpeed * curveSteerSlowSpeedFactor * curveSpeedFactor;
-			targetSpeedRight = normalSpeed * curveSteerFastSpeedFactor * curveSpeedFactor;
-		}
-	}
+        } else if (bottomLeft == -INF && bottomRight < INF) {
+            // we can see the right line, i.e. left turn
+            steerAmt = -curveSteerFactor;
+            targetSpeedLeft = normalSpeed * curveSteerSlowSpeedFactor * curveSpeedFactor;
+            targetSpeedRight = normalSpeed * curveSteerFastSpeedFactor * curveSpeedFactor;
+        }
+    }
+
+    void intersectionAdjust() {
+        steerAmt = 0;
+        targetSpeedLeft = targetSpeedRight = normalSpeed * intersectionSpeedFactor;
+    }
 };
 
 #endif
