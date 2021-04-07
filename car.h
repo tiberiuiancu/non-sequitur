@@ -46,40 +46,35 @@ public:
 	}
 
 	bool isStraightLine() {
-		updateTop();
-		return topLeft > -INF && topRight < INF && topRight - topLeft > minLRDistance;
+        updateTop();
+
+        // if we can't see both lines, return
+        if (topLeft == -INF || topRight == INF) {
+            return false;
+        }
+
+		return topRight - topLeft > minLRDistance;
 	}
 
-	bool straightLineAdjust() {
-		updateTop();
-
-		steerAmt = 0;
-
-		// if we are supposed to turn, don't adjust
-		if (!isStraightLine()) {
-			return false;
-		}
-
-		// if we can't see both lines, return
-		if (topLeft == -INF || topRight == INF) {
-			return false;
-		}
-
-		float rightFraction = ((float)(topRight - MIDDLE)) / ((float)(topRight - topLeft));
+	float getSteerAmt(int right, int left) {
+        float rightFraction = ((float)(right - MIDDLE)) / ((float)(right - left));
 		debug("Right fraction: %d/100\n", (int)(rightFraction * 100));
-		if (abs(rightFraction - 0.5f) > maxStraightLineError) {
-			// if we deviate enmough from the middle, steer
-			steerAmt = (rightFraction < 0.5f ? -straightSteerFactor : straightSteerFactor);
-		}
+        if (abs(rightFraction - 0.5f) > maxStraightLineError) {
+            // if we deviate enough from the middle, steer
+            return rightFraction < 0.5f ? -straightSteerFactor : straightSteerFactor;
+        } else {
+            return 0.0f;
+        }
+	}
 
-		return true;
+	void straightLineAdjust() {
+		updateTop();
+		steerAmt = getSteerAmt(topRight, topLeft);
 	}
 
 	// returns the amount the car should turn if there's a curve; 0 if there isn't a curve
 	void computeCurveSteer() {
 		updateBottom();
-
-		steerAmt = 0;
 
 		if (bottomLeft > -INF && bottomRight == INF) {
 			// we can see the left line, i.e. right turn
