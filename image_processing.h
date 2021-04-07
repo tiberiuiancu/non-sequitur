@@ -54,7 +54,7 @@ void getLeftRight(int &left, int &right) {
 
 	if (nSamples == 0) {
 		// assume that the middle is white, so we add samples from the middle of the image
-		for (int i = WIDTH / 2 - 2; i <= WIDHT / 2 + 2; ++i) {
+		for (int i = WIDTH / 2 - 2; i <= WIDTH / 2 + 2; ++i) {
 			addSample(img[i]);
 		}
 	}
@@ -66,7 +66,7 @@ void getLeftRight(int &left, int &right) {
 		}
 	}
 
-	for (int i = WIDHT / 2; i >= 0; --i) {
+	for (int i = WIDTH / 2; i >= 0; --i) {
 		if (!isWhite(img[i])) {
 			left = i;
 			break;
