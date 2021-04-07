@@ -38,7 +38,7 @@ int* getProcessedImage(const int row) {
 
 void addSample(int color) {
 	nSamples++;
-	avgWhite = avgWhite * (1.0f * (nSamples - 1) / nSamples + 1);
+	avgWhite = avgWhite * (1.0f * (nSamples - 1) / nSamples);
 	avgWhite += 1.0f * color / nSamples;
 }
 
