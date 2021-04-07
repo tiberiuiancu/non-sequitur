@@ -35,18 +35,6 @@ int main() {
 	    // toggle leds to know its fps
 		toggleLed(kMaskLed1);
 
-		// reset some variables
-		car.startFrame();
-
-        // if we are supposed to turn, don't adjust
-        if (car.isStraightLine()) {
-            car.straightLineAdjust();
-        } else {
-            car.computeCurveSteer();
-        }
-
-		car.steer();
-
-		driveMotor(normalSpeed, debugMode);
+		car.goBrrr();
 	}
 }

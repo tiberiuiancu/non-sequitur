@@ -13,7 +13,9 @@ private:
 	float steerAmt = 0;
 
 public:
-	float targetSpeed = 0; // between 0 and 1, target speed of car
+	float targetSpeedLeft = 0; // between 0 and 1, target speed of left wheel
+	float targetSpeedRight = 0; // between 0 and 1, target speed of right wheel
+
 	int topLeft = -INF; // where the left Line is detected, between 0 and WIDTH
 	int topRight= INF; // where the right line is detected, between 0 and WIDTH
 	int bottomLeft = -INF; // same as above
@@ -21,10 +23,23 @@ public:
 
 	Car() {}
 
-	void startFrame() {
+	void goBrrr() {
+        // reset some variables
 		topUpdated = false;
 		bottomUpdated = false;
 		turnChecked = false;
+
+		// If on straight line, small adjust only
+        if (isStraightLine()) {
+            straightLineAdjust();
+        }
+        // Else steer hard
+        else {
+            computeCurveSteer();
+        }
+
+        turn(steerAmt);
+        driveMotorIndividual(targetSpeedLeft, targetSpeedRight);
 	}
 
 	void updateTop() {
@@ -70,6 +85,7 @@ public:
 	void straightLineAdjust() {
 		updateTop();
 		steerAmt = getSteerAmt(topRight, topLeft);
+		targetSpeedLeft = targetSpeedRight = normalSpeed;
 	}
 
 	// returns the amount the car should turn if there's a curve; 0 if there isn't a curve
@@ -79,14 +95,14 @@ public:
 		if (bottomLeft > -INF && bottomRight == INF) {
 			// we can see the left line, i.e. right turn
 			steerAmt = curveSteerFactor;
+            targetSpeedRight = normalSpeed * curveSteerSlowSpeedFactor * curveSpeedFactor;
+            targetSpeedLeft = normalSpeed * curveSteerFastSpeedFactor * curveSpeedFactor;
 		} else if (bottomLeft == -INF && bottomRight < INF) {
 			// we can see the right line, i.e. left turn
 			steerAmt = -curveSteerFactor;
+			targetSpeedLeft = normalSpeed * curveSteerSlowSpeedFactor * curveSpeedFactor;
+			targetSpeedRight = normalSpeed * curveSteerFastSpeedFactor * curveSpeedFactor;
 		}
-	}
-
-	void steer() {
-		turn(steerAmt);
 	}
 };
 
