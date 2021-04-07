@@ -51,6 +51,8 @@ public:
         // if we can't see both lines, return
         if (topLeft == -INF || topRight == INF) {
             return false;
+        } else if(topLeft == -INF && topRight == INF) {
+        	return false;
         }
 
 		return topRight - topLeft > minLRDistance;

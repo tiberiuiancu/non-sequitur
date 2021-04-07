@@ -2,12 +2,12 @@
 #define CONSTANTS_H_
 
 #define WIDTH 316
-#define MIDDLE 158
+#define MIDDLE (int)(WIDTH / 2)
 
 // speed multiplier for when a curve is detected
-const float curveSpeedFactor = 0.75f;
-const float curveSteerSlowSpeedFactor = 0.15f;
-const float curveSteerFastSpeedFactor = 1.7f;
+const float curveSpeedFactor = 0.5f;
+const float curveSteerSlowSpeedFactor = 0.3f;
+const float curveSteerFastSpeedFactor = 1.5f;
 
 // speed of the car
 float normalSpeed = 0.2f;

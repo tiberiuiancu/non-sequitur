@@ -26,7 +26,7 @@ int nSamples = 0;
 float avgWhite = 0;
 
 int* getProcessedImage(const int row) {
-	// read image and make greyscale
+	// read image and make grayscale
 	uint8_t r, g, b;
 	for (int i = 0; i < WIDTH; ++i) {
 		pixy.video.getRGB(i, row, &r, &g, &b, false);
@@ -54,19 +54,19 @@ void getLeftRight(int &left, int &right) {
 
 	if (nSamples == 0) {
 		// assume that the middle is white, so we add samples from the middle of the image
-		for (int i = WIDTH / 2 - 2; i <= WIDTH / 2 + 2; ++i) {
+		for (int i = MIDDLE - 2; i <= MIDDLE + 2; ++i) {
 			addSample(img[i]);
 		}
 	}
 
-	for (int i = WIDTH / 2; i < WIDTH; ++i) {
+	for (int i = MIDDLE; i < WIDTH; ++i) {
 		if (!isWhite(img[i])) {
 			right = i;
 			break;
 		}
 	}
 
-	for (int i = WIDTH / 2; i >= 0; --i) {
+	for (int i = MIDDLE; i >= 0; --i) {
 		if (!isWhite(img[i])) {
 			left = i;
 			break;
