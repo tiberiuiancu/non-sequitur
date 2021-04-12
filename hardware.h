@@ -36,7 +36,7 @@ static Int16 sDly;
 
 // values to calibrate the motors and the servo
 const float calibrate = 0.965f;
-const float servoOffset = 0.15f;
+const float servoOffset = 0.11f;
 const float minSpeed = 0.35f;
 const float maxSpeed = 1.0f;
 

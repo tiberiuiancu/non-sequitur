@@ -16,6 +16,9 @@ int main() {
 
     Car car = Car();
 
+
+    bool reset = true;
+
     // main loop
 	while(true) {
 	    // set debug mode on if switch 4 is set
@@ -29,8 +32,14 @@ int main() {
 	    if (!readSwitch(kSw1)) {
 	    	turn(0);
 	    	driveMotor(0);
+	    	reset = true;
 	    	continue;
 	    }
+
+	    if (reset) {
+			initialSampling();
+			reset = false;
+		}
 
 	    // toggle leds to know its fps
 		toggleLed(kMaskLed1);

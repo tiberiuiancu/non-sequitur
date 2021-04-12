@@ -34,6 +34,6 @@ const int bottomRow = 100;
 // number of frames until we consider we have to turn
 const int minCurveFrames = 1;
 
-float curveSteerFactor = 1;
+float curveSteerFactor = 0.8f;
 
 #endif

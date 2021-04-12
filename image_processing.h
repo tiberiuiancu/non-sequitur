@@ -25,12 +25,16 @@ int img[WIDTH];
 int nSamples = 0;
 float avgWhite = 0;
 
+int getPixel(int col, int row) {
+	uint8_t r, g, b;
+	pixy.video.getRGB(col, row, &r, &g, &b, false);
+	return (r + g + b) / 3;
+}
+
 int* getProcessedImage(const int row) {
 	// read image and make grayscale
-	uint8_t r, g, b;
 	for (int i = 0; i < WIDTH; ++i) {
-		pixy.video.getRGB(i, row, &r, &g, &b, false);
-		img[i] = (r + g + b) / 3;
+		img[i] = getPixel(i, row);
 	}
 
 	return img;
@@ -48,15 +52,21 @@ bool isWhite(int color, float threshold=0.1f) {
 	return err < threshold;
 }
 
+void initialSampling() {
+	avgWhite = 0;
+	nSamples = 0;
+	// assume that the middle is white, so we add samples from the middle of the image
+	for (int i = MIDDLE - 5; i <= MIDDLE + 5; ++i) {
+		addSample(getPixel(i, bottomRow));
+	}
+}
+
 void getLeftRight(int &left, int &right) {
 	left = -INF;
 	right = INF;
 
 	if (nSamples == 0) {
-		// assume that the middle is white, so we add samples from the middle of the image
-		for (int i = MIDDLE - 2; i <= MIDDLE + 2; ++i) {
-			addSample(img[i]);
-		}
+		initialSampling();
 	}
 
 	for (int i = MIDDLE; i < WIDTH; ++i) {
