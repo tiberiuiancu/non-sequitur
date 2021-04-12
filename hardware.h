@@ -1,11 +1,12 @@
-#ifndef LIB_H
-#define LIB_H
+#ifndef HARDWARE_H_
+#define HARDWARE_H_
 
 extern "C"
 {
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "board.h"
 #include "peripherals.h"
@@ -31,110 +32,13 @@ extern "C"
 #include "Applications/gOutput.h"
 }
 
-#include <ctime>
-#include <cstdlib>
-#include <cmath>
-#include "Pixy/Pixy2SPI_SS.h"
-
-#define K_MAIN_INTERVAL	(100 / kPit1Period)
-#define kSpeedTabSize 100
-
-#define WIDTH 316
-#define INF 1000
-
 static Int16 sDly;
 
 // values to calibrate the motors and the servo
 const float calibrate = 0.965f;
-const float servoOffset = 0.085f;
-
+const float servoOffset = 0.11f;
 const float minSpeed = 0.35f;
 const float maxSpeed = 1.0f;
-
-const int middle = WIDTH / 2;
-
-int nSamples = 0;
-
-struct rgb {
-    double r, g, b;
-
-    rgb(){}
-    rgb(double _r, double _g, double _b) {
-        r = _r;
-        g = _g;
-        b = _b;
-    }
-
-    double getMax() {
-        return max(max(r, g), b);
-    }
-} avg;
-
-double cosineSimilarity(rgb a, rgb b) {
-    double top = a.r * b.r + a.g * b.g + a.b * b.b;
-    double bottom = sqrt(a.r * a.r + a.g * a.g + a.b * a.b) * sqrt(b.r * b.r + b.g * b.g + b.b * b.b);
-
-    // angle * ratio between the smaller and the bigger of the vectors
-    return (top / bottom) * ((min(a.getMax(), b.getMax()) / max(a.getMax(), b.getMax())));
-}
-
-void addSample(rgb x) {
-    if (nSamples == 0) {
-        avg.r = x.r;
-        avg.g = x.g;
-        avg.b = x.b;
-    } else {
-        avg.r *= ((double) nSamples) / ((double) nSamples + 1);
-        avg.g *= ((double) nSamples) / ((double) nSamples + 1);
-        avg.b *= ((double) nSamples) / ((double) nSamples + 1);
-
-        avg.r += ((double) x.r) / ((double) nSamples + 1);
-        avg.g += ((double) x.g) / ((double) nSamples + 1);
-        avg.b += ((double) x.b) / ((double) nSamples + 1);
-    }
-    nSamples++;
-}
-
-void resetSamples() {
-    nSamples = 0;
-    avg.r = avg.b = avg.g = 0;
-}
-
-bool isWhite(rgb x, bool toAdd=false, double threshold=0.75) {
-    double c = cosineSimilarity(x, avg);
-
-    if (c >= threshold) {
-        if (toAdd) addSample(x);
-        return true;
-    }
-    false;
-}
-
-int getRight(Pixy2SPI_SS &pixy, const int row) {
-    uint8_t r, g, b;
-
-    for (int i = middle; i < WIDTH; i += 2) {
-        pixy.video.getRGB(i, row, &r, &g, &b, false);
-        if (!isWhite({r, g, b}, i - middle < 10)) {
-            return i;
-        }
-    }
-
-    return INF;
-}
-
-int getLeft(Pixy2SPI_SS &pixy, const int row) {
-    uint8_t r, g, b;
-
-    for (int i = middle - 1; i >= 0; i -= 2) {
-        pixy.video.getRGB(i, row, &r, &g, &b, false);
-        if (!isWhite({r, g, b}, middle - i < 10)) {
-            return i;
-        }
-    }
-
-    return -1;
-}
 
 // Change led state
 // led: kMaskLed1, kMaskLed2, kMaskLed3, kMaskLed4
@@ -142,9 +46,23 @@ int getLeft(Pixy2SPI_SS &pixy, const int row) {
 void led(LedMaskEnum led, LedStateEnum state) {
     mLeds_Write(led, state);
 }
-// Togglezzzzzzzzzzzzzzzzzzzzszzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz led
+
+// led: kMaskLed1, kMaskLed2, kMaskLed3, kMaskLed4
 void toggleLed(LedMaskEnum led) {
     mLeds_Toggle(led);
+}
+
+// led: kMaskLed1, kMaskLed2, kMaskLed3, kMaskLed4
+void enableSingleLed(LedMaskEnum ledMask) {
+	for(int i = 0; i < 4; i++) {
+		LedMaskEnum powerLed = (LedMaskEnum)pow(2, i);
+
+		if(powerLed == ledMask) {
+			led(powerLed, kLedOn);
+		} else {
+			led(powerLed, kLedOff);
+		}
+	}
 }
 
 void setLights(float val) {
@@ -158,24 +76,19 @@ void setLights(float val) {
 bool readSwitch(SwitchEnum sw) {
     return mSwitch_ReadSwitch(sw);
 }
+
 // but: kPushButSW1, kPushButSW2
 bool readButton(PushButEnum but) {
     return mSwitch_ReadPushBut(but);
 }
 
-// Turn on the motor
-// speed: -1 < speed < 1 and = both motors
-void driveMotor(float speed) {
-    if (speed < 0.001f) {
-        mTimer_SetMotorDuty(0, 0);
-    } else {
-        speed = speed * (maxSpeed - minSpeed) + minSpeed;
-        mTimer_SetMotorDuty(speed * calibrate, speed);
-    }
-}
 // left: -1 < left < 1 and = left motor
 // right: -1 < right < 1 and = right motor
-void driveMotorIndividual(float left, float right) {
+void driveMotorIndividual(float left, float right, bool cancel = false) {
+	if (cancel) {
+		return;
+	}
+
     if (left < 0.001f) {
         left = 0;
     } else {
@@ -186,7 +99,15 @@ void driveMotorIndividual(float left, float right) {
     } else {
         right = right * (maxSpeed - minSpeed) + minSpeed;
     }
+
+    // We calibrate the left motor because it's faster than the right one
     mTimer_SetMotorDuty(left * calibrate, right);
+}
+
+// Turn on the motor
+// speed: -1 < speed < 1 and = both motors
+void driveMotor(float speed, bool cancel = false) {
+	driveMotorIndividual(speed, speed, cancel);
 }
 
 // Get the speed of the motor in passed variables
