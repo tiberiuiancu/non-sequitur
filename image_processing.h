@@ -46,7 +46,7 @@ void addSample(int color) {
 	avgWhite += 1.0f * color / nSamples;
 }
 
-bool isWhite(int color, float threshold=0.1f) {
+bool isWhite(int color, float threshold=0.2f) {
 	float err = fabs(avgWhite - color) / avgWhite;
 	debug("%d/100\n", (int) (err * 100));
 	return err < threshold;
@@ -56,7 +56,7 @@ void initialSampling() {
 	avgWhite = 0;
 	nSamples = 0;
 	// assume that the middle is white, so we add samples from the middle of the image
-	for (int i = MIDDLE - 5; i <= MIDDLE + 5; ++i) {
+	for (int i = MIDDLE - 3; i <= MIDDLE + 3; ++i) {
 		addSample(getPixel(i, bottomRow));
 	}
 }
