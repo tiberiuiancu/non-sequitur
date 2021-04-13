@@ -20,8 +20,8 @@ float intersectionSpeedFactor = 0.7f;
 float curveSpeedFactor = 0.5f;
 float curveSteerFactor = 0.85f;
 
-const float curveSteerSlowSpeedFactor = 0.25f;
-const float curveSteerFastSpeedFactor = 1.5f;
+const float curveSteerSlowSpeedFactor = 0.75f;
+const float curveSteerFastSpeedFactor = 1.25f;
 
 // steering multiplier for when the car is going forwards
 const float straightSteerFactor = 0.15f;
