@@ -4,36 +4,56 @@
 #define WIDTH 316
 #define MIDDLE (int)(WIDTH / 2)
 
-// speed multiplier for when a curve is detected
-const float curveSpeedFactor = 0.5f;
-const float curveSteerSlowSpeedFactor = 0.25f;
-const float curveSteerFastSpeedFactor = 1.5f;
-
-// speed of the car
-float normalSpeed = 0.2f;
-
-// steering multiplier for when the car is going forwards
-const float straightSteerFactor = 0.15f;
-
-// steer factor for when we adjust the car position before a curve
-const float precurveAdjustSteerFactor = 0.2f;
-
-// speed multiplier for when an intersection is detected
-const float intersectionSpeedFactor = 0.7f;
-
-// threshold for when the cars is too much to one side in a straight line
-const float maxStraightLineError = 0.05f;
+// rows camera takes the image from
+int topRow = 25;
+int bottomRow = 100;
 
 // if the minimum distance between right and left is smaller than this, don't do anything
 const int minLRDistance = 40;
 
-// rows camera takes the image from
-const int topRow = 25;
-const int bottomRow = 100;
+// speed of the car
+float normalSpeed = 0.2f;
+// speed multiplier for when an intersection is detected
+float intersectionSpeedFactor = 0.7f;
 
-// number of frames until we consider we have to turn
-const int minCurveFrames = 1;
-
+// speed multiplier for when a curve is detected
+float curveSpeedFactor = 0.5f;
 float curveSteerFactor = 0.85f;
+
+const float curveSteerSlowSpeedFactor = 0.25f;
+const float curveSteerFastSpeedFactor = 1.5f;
+
+// steering multiplier for when the car is going forwards
+const float straightSteerFactor = 0.15f;
+
+// threshold for when the cars is too much to one side in a straight line
+const float maxStraightLineError = 0.05f;
+
+void initReliable() {
+	bottomRow = 100;
+	normalSpeed = 0.2f;
+	intersectionSpeedFactor = 0.7f;
+
+	curveSpeedFactor = 0.5f;
+	curveSteerFactor = 0.85f;
+}
+
+void initFastAndFurious() {
+	bottomRow = 90;
+	normalSpeed = 0.35f;;
+	intersectionSpeedFactor = 0.7f;
+
+	curveSpeedFactor = 0.4f;
+	curveSteerFactor = 0.7f;
+}
+
+void initLudicrousSpeed() {
+	bottomRow= 80;
+	normalSpeed = 0.35f;
+	intersectionSpeedFactor = 0.8f;
+
+	curveSpeedFactor = 0.35f;
+	curveSteerFactor = 0.8f;
+}
 
 #endif
