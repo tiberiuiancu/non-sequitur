@@ -20,7 +20,7 @@ float intersectionSpeedFactor = 0.7f;
 float curveSpeedFactor = 0.5f;
 float curveSteerFactor = 0.85f;
 
-const float curveSteerSlowSpeedFactor = 0.75f;
+const float curveSteerSlowSpeedFactor = 0.9f;
 const float curveSteerFastSpeedFactor = 1.25f;
 
 // steering multiplier for when the car is going forwards
@@ -28,6 +28,9 @@ const float straightSteerFactor = 0.15f;
 
 // threshold for when the cars is too much to one side in a straight line
 const float maxStraightLineError = 0.05f;
+
+// number of frames until we consider we have to turn
+const int targetStopFrames = 10;
 
 void initReliable() {
 	bottomRow = 100;
@@ -39,15 +42,13 @@ void initReliable() {
 }
 
 void initFastAndFurious() {
-	bottomRow = 90;
-	normalSpeed = 0.35f;;
-	intersectionSpeedFactor = 0.7f;
+	bottomRow = 95;
+	normalSpeed = 0.27f;
+	intersectionSpeedFactor = 0.75f;
 
-	curveSpeedFactor = 0.4f;
-	curveSteerFactor = 0.7f;
+	curveSpeedFactor = 0.5f;
+	curveSteerFactor = 0.80f;
 }
-// number of frames until we consider we have to turn
-const int targetStopFrames = 10;
 
 void initLudicrousSpeed() {
 	bottomRow= 80;
