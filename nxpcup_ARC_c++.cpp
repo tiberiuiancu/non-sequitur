@@ -16,7 +16,6 @@ int main() {
 
     Car car = Car();
 
-
     bool reset = true;
 
     // main loop
@@ -38,6 +37,8 @@ int main() {
 
 	    if (reset) {
 			initialSampling();
+			car.shouldStop = false;
+			car.nStopFrames = 0;
 			reset = false;
 		}
 

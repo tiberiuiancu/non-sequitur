@@ -10,7 +10,7 @@ const float curveSteerSlowSpeedFactor = 0.25f;
 const float curveSteerFastSpeedFactor = 1.5f;
 
 // speed of the car
-float normalSpeed = 0.2f;
+float normalSpeed = 0.275f;
 
 // steering multiplier for when the car is going forwards
 const float straightSteerFactor = 0.15f;
@@ -32,7 +32,7 @@ const int topRow = 25;
 const int bottomRow = 100;
 
 // number of frames until we consider we have to turn
-const int minCurveFrames = 1;
+const int targetStopFrames = 20;
 
 float curveSteerFactor = 0.85f;
 
