@@ -32,7 +32,7 @@ const int topRow = 25;
 const int bottomRow = 100;
 
 // number of frames until we consider we have to turn
-const int targetStopFrames = 20;
+const int targetStopFrames = 10;
 
 float curveSteerFactor = 0.85f;
 

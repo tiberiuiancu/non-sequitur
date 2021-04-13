@@ -139,10 +139,10 @@ public:
     }
 
     bool checkEndLine() {
-    	const int lineToCheck = bottomRow;
+    	const int lineToCheck = 110;
     	const int colJump = 10;
-		const int colStart = MIDDLE - 4 * colJump;
-		const int colEnd = MIDDLE + 4 * colJump;
+		const int colStart = MIDDLE - 5 * colJump;
+		const int colEnd = MIDDLE + 5 * colJump;
 		bool pattern[(colEnd - colStart) / colJump + 2];
 
 		int patternIndex = 0;
