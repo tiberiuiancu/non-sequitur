@@ -17,10 +17,13 @@ private:
 	bool bottomUpdated = false;
 	bool turnChecked = false;
 	float steerAmt = 0;
+	int endLineFrames = 0;
 
 public:
 	float targetSpeedLeft = 0; // between 0 and 1, target speed of left wheel
 	float targetSpeedRight = 0; // between 0 and 1, target speed of right wheel
+	bool shouldStop = false;
+	int nStopFrames = 0;
 
 	int topLeft = -INF; // where the left Line is detected, between 0 and WIDTH
 	int topRight= INF; // where the right line is detected, between 0 and WIDTH
@@ -35,9 +38,20 @@ public:
 		bottomUpdated = false;
 		turnChecked = false;
 
+		if (shouldStop) {
+			nStopFrames++;
+			if (nStopFrames >= targetStopFrames) {
+				driveMotor(0);
+				return;
+			}
+		}
+
         // If on straight line, small adjust only
         switch (getTrackType()) {
             case Straight:
+            	if (!shouldStop && checkEndLine()) {
+					shouldStop = true;
+				}
                 straightAdjust();
                 enableSingleLed(kMaskLed2);
                 break;
@@ -123,6 +137,47 @@ public:
         steerAmt = 0;
         targetSpeedLeft = targetSpeedRight = normalSpeed * intersectionSpeedFactor;
     }
+
+    bool checkEndLine() {
+    	const int lineToCheck = bottomRow;
+    	const int colJump = 10;
+		const int colStart = MIDDLE - 4 * colJump;
+		const int colEnd = MIDDLE + 4 * colJump;
+		bool pattern[(colEnd - colStart) / colJump + 2];
+
+		int patternIndex = 0;
+
+		for (int col = colStart; col < colEnd; col += colJump) {
+			bool blackRow = false;
+			for (int row = lineToCheck - 5; row <= lineToCheck + 5 && !blackRow; ++row) {
+				if (!isWhite(getPixel(col, row))) {
+					blackRow = true;
+				}
+			}
+
+			if (patternIndex == 0 || pattern[patternIndex - 1] != blackRow) {
+				pattern[patternIndex++] = blackRow;
+			}
+		}
+
+		int nBlack = 0;
+		for (int i = 0; i < patternIndex; ++i) {
+			debug("%d", pattern[i]);
+			if (pattern[i]) {
+				nBlack++;
+			}
+		}
+		debug("\n");
+
+		if (nBlack >= 2) {
+			endLineFrames++;
+		} else {
+			endLineFrames = 0;
+		}
+
+		return endLineFrames >= 1;
+	}
+
 };
 
 #endif

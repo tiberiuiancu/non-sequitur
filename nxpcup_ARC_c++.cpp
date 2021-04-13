@@ -42,6 +42,8 @@ int main() {
             else if(readSwitch(kSw3)) initLudicrousSpeed();
 
             initialSampling();
+            car.shouldStop = false;
+            car.nStopFrames = 0;
             reset = false;
         }
 

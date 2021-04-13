@@ -46,6 +46,8 @@ void initFastAndFurious() {
 	curveSpeedFactor = 0.4f;
 	curveSteerFactor = 0.7f;
 }
+// number of frames until we consider we have to turn
+const int targetStopFrames = 10;
 
 void initLudicrousSpeed() {
 	bottomRow= 80;
