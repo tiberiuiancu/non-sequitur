@@ -29,17 +29,21 @@ int main() {
 	    }
 
 	    // cancel if switch 1 is off
-	    if (!readSwitch(kSw1)) {
-	    	turn(0);
-	    	driveMotor(0);
-	    	reset = true;
-	    	continue;
-	    }
+        if (!readSwitch(kSw1) && !readSwitch(kSw2) && !readSwitch(kSw3)) {
+            turn(0);
+            driveMotor(0);
+            reset = true;
+            continue;
+        }
 
-	    if (reset) {
-			initialSampling();
-			reset = false;
-		}
+        if (reset) {
+            if(readSwitch(kSw1)) initReliable();
+            else if(readSwitch(kSw2)) initFastAndFurious();
+            else if(readSwitch(kSw3)) initLudicrousSpeed();
+
+            initialSampling();
+            reset = false;
+        }
 
 	    // toggle leds to know its fps
 		toggleLed(kMaskLed1);
