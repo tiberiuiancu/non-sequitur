@@ -8,7 +8,8 @@
 enum TrackType {
     Straight,
     Corner,
-    Intersection
+    Intersection,
+	Unknown
 };
 
 class Car {
@@ -49,6 +50,8 @@ public:
                 intersectionAdjust();
                 enableSingleLed(kMaskLed4);
                 break;
+            case Unknown:
+            	break;
         }
 
         turn(steerAmt);
@@ -89,7 +92,7 @@ public:
             return Corner;
         }
 
-        return Straight;
+        return Unknown;
 	}
 
 	float getSteerAmt(int right, int left) {
