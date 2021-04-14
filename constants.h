@@ -19,16 +19,16 @@ const float straightSteerFactor = 0.15f;
 const float precurveAdjustSteerFactor = 0.2f;
 
 // speed multiplier for when an intersection is detected
-const float intersectionSpeedFactor = 0.7f;
+const float intersectionSpeedFactor = 0.9f;
 
 // threshold for when the cars is too much to one side in a straight line
 const float maxStraightLineError = 0.05f;
 
 // if the minimum distance between right and left is smaller than this, don't do anything
-const int minLRDistance = 40;
+const int minLRDistance = 160;
 
 // rows camera takes the image from
-const int topRow = 25;
+const int topRow = 40;
 const int bottomRow = 100;
 
 // number of frames until we consider we have to turn
