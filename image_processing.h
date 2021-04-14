@@ -48,7 +48,6 @@ void addSample(int color) {
 
 bool isWhite(int color, float threshold=0.20f) {
 	float err = fabs(avgWhite - color) / avgWhite;
-	debug("err: %d/100\n", (int) (err * 100));
 	return err < threshold;
 }
 
