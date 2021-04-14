@@ -8,7 +8,8 @@
 enum TrackType {
     Straight,
     Corner,
-    Intersection
+    Intersection,
+	Unknown
 };
 
 class Car {
@@ -63,6 +64,8 @@ public:
                 intersectionAdjust();
                 enableSingleLed(kMaskLed4);
                 break;
+            case Unknown:
+            	break;
         }
 
         turn(steerAmt);
@@ -89,19 +92,25 @@ public:
 
 	int getTrackType() {
         updateTop();
+        if (topLeft > -INF && topRight < INF && topRight - topLeft > minLRDistance) {
+        	return Straight;
+        }
 
-        if(topLeft == -INF && topRight == INF) {
+        updateBottom();
+
+        if(bottomLeft == -INF && bottomRight == INF) {
             return Intersection;
-        } if (topLeft == -INF || topRight == INF) {
+        }
+
+        if (bottomLeft == -INF || bottomRight == INF) {
             return Corner;
         }
 
-		return topRight - topLeft > minLRDistance ? Straight : Corner;
+        return Unknown;
 	}
 
 	float getSteerAmt(int right, int left) {
         float rightFraction = ((float)(right - MIDDLE)) / ((float)(right - left));
-		debug("Right fraction: %d/100\n", (int)(rightFraction * 100));
         if (abs(rightFraction - 0.5f) > maxStraightLineError) {
             // if we deviate enough from the middle, steer
             return rightFraction < 0.5f ? -straightSteerFactor : straightSteerFactor;
@@ -121,16 +130,16 @@ public:
         updateBottom();
 
         if (bottomLeft > -INF && bottomRight == INF) {
-            // we can see the left line, i.e. right turn
-            steerAmt = curveSteerFactor;
-            targetSpeedRight = normalSpeed * curveSteerSlowSpeedFactor * curveSpeedFactor;
-            targetSpeedLeft = normalSpeed * curveSteerFastSpeedFactor * curveSpeedFactor;
-        } else if (bottomLeft == -INF && bottomRight < INF) {
-            // we can see the right line, i.e. left turn
-            steerAmt = -curveSteerFactor;
-            targetSpeedLeft = normalSpeed * curveSteerSlowSpeedFactor * curveSpeedFactor;
-            targetSpeedRight = normalSpeed * curveSteerFastSpeedFactor * curveSpeedFactor;
-        }
+			// we can see the left line, i.e. right turn
+			steerAmt = curveSteerFactor;
+			targetSpeedRight = normalSpeed * curveSteerSlowSpeedFactor;
+			targetSpeedLeft = normalSpeed * curveSteerFastSpeedFactor;
+		} else if (bottomLeft == -INF && bottomRight < INF) {
+			// we can see the right line, i.e. left turn
+			steerAmt = -curveSteerFactor;
+			targetSpeedLeft = normalSpeed * curveSteerSlowSpeedFactor;
+			targetSpeedRight = normalSpeed * curveSteerFastSpeedFactor;
+		}
     }
 
     void intersectionAdjust() {
