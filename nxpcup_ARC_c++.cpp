@@ -10,6 +10,7 @@ int main() {
     // Pixycam
     Pixy2SPI_SS pixy;
     pixy.init();
+    pixy.changeProg("video");
     pixy.setLED(0, 255, 0);
 
     mDelay_GetDelay(kPit1, 500 / kPit1Period);
@@ -20,7 +21,7 @@ int main() {
     const int middle = WIDTH / 2;
 
     // speed of the car
-    float normalSpeed = 0.32f;
+    float normalSpeed = 0.2f;
 
     // steering multiplier for when the car is going forwards
     const float straightSteerFactor = 0.15f;
@@ -37,7 +38,7 @@ int main() {
     const float straightThreshold = 0.65f;
 
     // if the minimum distance between right and left is smaller than this, don't do anything
-    const int minLRDistance = 130;
+    const int minLRDistance = 100;
 
     // rows camera takes the image from
     const int topRow = 10;
@@ -59,6 +60,8 @@ int main() {
 
     // main loop
 	while(true) {
+		toggleLed(kMaskLed1);
+
 	    // set debug mode on if switch 4 is set
 	    if (readSwitch(kSw4)) {
 	        debugMode = true;
@@ -97,8 +100,11 @@ int main() {
                 }
 
                 driveMotor(normalSpeed);
+                pixy.setLED(255, 0, 0);
                 continue;
             }
+
+            pixy.setLED(0, 255, 0);
 
             // accelerate/deaccelerate track
             if(readSwitch(kSw2)){
@@ -112,6 +118,7 @@ int main() {
                         normalSpeed = 0.125f;
                         switchSpeeds = true;
                     }
+                }
             }
 
             driveMotor(curveSpeedFactor * normalSpeed);

@@ -102,12 +102,13 @@ void resetSamples() {
 
 bool isWhite(rgb x, bool toAdd=false, double threshold=0.85) {
     double c = cosineSimilarity(x, avg);
+    printf("%d/1000\n", (int) (c * 1000));
 
     if (c >= threshold) {
         if (toAdd) addSample(x);
         return true;
     }
-    false;
+    return false;
 }
 
 // used for checking the number of black blocks on the race track (for stopping/accelerating/slowing-down)
@@ -117,7 +118,7 @@ int barcodeScanner(Pixy2SPI_SS &pixy, const int row){
 
 	for(int i = 0; i < WIDTH; i = i + 2){
 		pixy.video.getRGB(i, row, &r, &g, &b, false);
-		if(isWhite({r, b, g}) == true){
+		if(isWhite({r, g, b}) == true){
 			if(checkSwitch == 1){
 				keyWhite++;
 				checkSwitch = 0;
@@ -135,7 +136,7 @@ int getRight(Pixy2SPI_SS &pixy, const int row) {
 
     for (int i = middle; i < WIDTH; ++i) {
         pixy.video.getRGB(i, row, &r, &g, &b, false);
-        if (!isWhite({r, g, b}, i - middle < 10)) {
+        if (!isWhite({r, g, b})) {
             return i;
         }
     }
@@ -147,7 +148,7 @@ int getLeft(Pixy2SPI_SS &pixy, const int row) {
 
     for (int i = middle - 1; i >= 0; --i) {
         pixy.video.getRGB(i, row, &r, &g, &b, false);
-        if (!isWhite({r, g, b}, middle - i < 10)) {
+        if (!isWhite({r, g, b})) {
             return i;
         }
     }
