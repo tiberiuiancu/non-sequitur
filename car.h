@@ -112,18 +112,6 @@ public:
     void cornerAdjust() {
         updateBottom();
 
-//        if (bottomLeft > -INF && bottomRight == INF) {
-//            // we can see the left line, i.e. right turn
-//            steerAmt = curveSteerFactor;
-//            targetSpeedRight = normalSpeed * curveSteerSlowSpeedFactor * curveSpeedFactor;
-//            targetSpeedLeft = normalSpeed * curveSteerFastSpeedFactor * curveSpeedFactor;
-//        } else if (bottomLeft == -INF && bottomRight < INF) {
-//            // we can see the right line, i.e. left turn
-//            steerAmt = -curveSteerFactor;
-//            targetSpeedLeft = normalSpeed * curveSteerSlowSpeedFactor * curveSpeedFactor;
-//            targetSpeedRight = normalSpeed * curveSteerFastSpeedFactor * curveSpeedFactor;
-//        }
-
         if (bottomLeft > -INF && bottomRight == INF) {
 			// we can see the left line, i.e. right turn
 			steerAmt = curveSteerFactor;
